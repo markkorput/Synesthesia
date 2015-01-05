@@ -2,6 +2,7 @@
   "inputs": [
     "opticalFlow",
     "audio",
-    "blob"
+    "blob",
+    "motionData"
   ]
 }

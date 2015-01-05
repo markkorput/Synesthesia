@@ -172,7 +172,9 @@ function redraw() {
 	gl.bufferData(gl.ARRAY_BUFFER, vertices, gl.DYNAMIC_DRAW);
 		
 	gl.lineWidth(1);
-	gl.drawArrays( gl.LINES, 0, numLines );
+	
+	if(numLines > 0)
+		gl.drawArrays( gl.LINES, 0, numLines );
 	
 	gl.flush();
 }
