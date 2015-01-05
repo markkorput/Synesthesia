@@ -4,7 +4,7 @@
 
   this.Motgraphs = (function() {
     function Motgraphs(opts) {
-      this.updateChart = __bind(this.updateChart, this);
+      this.updateCharts = __bind(this.updateCharts, this);
       var server,
         _this = this;
       this.options = opts;
@@ -15,15 +15,21 @@
       server.on('motionData', function(data) {
         return _this.update(data);
       });
+      server.on('accelerationData', function(data) {
+        return _this.accelerationUpdate(data);
+      });
       server.on('audio', function(data) {
         return console.log("[warning] shouldn't be receiving audio");
       });
       this.alphas = [];
       this.betas = [];
       this.gammas = [];
+      this.accelsX = [];
+      this.accelsY = [];
+      this.accelsZ = [];
       this.chart = new CanvasJS.Chart("chartContainer", {
         title: {
-          text: "Motion Data"
+          text: "Orientation Data"
         },
         data: [
           {
@@ -38,8 +44,25 @@
           }
         ]
       });
+      this.chartAccel = new CanvasJS.Chart("accelContainer", {
+        title: {
+          text: "Acceleration Data"
+        },
+        data: [
+          {
+            type: "line",
+            dataPoints: this.accelsX
+          }, {
+            type: "line",
+            dataPoints: this.accelsY
+          }, {
+            type: "line",
+            dataPoints: this.accelsZ
+          }
+        ]
+      });
       this.startdate = new Date();
-      setInterval(this.updateChart, 100);
+      setInterval(this.updateCharts, 100);
       console.log('[debug] Motgraphs initialized');
     }
 
@@ -50,7 +73,14 @@
       return this.lastData = data;
     };
 
-    Motgraphs.prototype.updateChart = function() {
+    Motgraphs.prototype.accelerationUpdate = function(data) {
+      if (!this.lastAccelData) {
+        console.log('Acceleration data:', data);
+      }
+      return this.lastAccelData = data;
+    };
+
+    Motgraphs.prototype.updateCharts = function() {
       var data, x;
       x = ((new Date().getTime()) - this.startdate.getTime()) / 1000;
       data = this.lastData || {
@@ -79,7 +109,36 @@
       while (this.gammas.length > 150) {
         this.gammas.shift();
       }
-      return this.chart.render();
+      this.chart.render();
+      data = this.lastAccelData || {
+        accelerationIncludingGravity: {
+          x: 0,
+          y: 0,
+          z: 0
+        }
+      };
+      this.accelsX.push({
+        x: x,
+        y: data.accelerationIncludingGravity.x
+      });
+      this.accelsY.push({
+        x: x,
+        y: data.accelerationIncludingGravity.y
+      });
+      this.accelsZ.push({
+        x: x,
+        y: data.accelerationIncludingGravity.z
+      });
+      while (this.accelsX.length > 150) {
+        this.accelsX.shift();
+      }
+      while (this.accelsY.length > 150) {
+        this.accelsY.shift();
+      }
+      while (this.accelsZ.length > 150) {
+        this.accelsZ.shift();
+      }
+      return this.chartAccel.render();
     };
 
     return Motgraphs;

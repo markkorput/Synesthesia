@@ -1,5 +1,6 @@
 {
   "inputs": [
-    "motionData"
+    "motionData",
+    "accelerationData"
   ]
 }

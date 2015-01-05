@@ -192,6 +192,9 @@ dancer.on('connection', function (dancer) {
   dancer.on('motionData', function (data) {
     emitData('motionData', data);
   });
+  dancer.on('accelerationData', function (data) {
+    emitData('accelerationData', data);
+  });
 });
 
 //////////////////////////////////////////
