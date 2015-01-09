@@ -63,24 +63,21 @@ class @Motgraphs
     @betas.push(x: x, y: data.beta)
     @gammas.push(x: x, y: data.gamma)
 
-    @alphas.shift() while @alphas.length > 150
-    @betas.shift() while @betas.length > 150
-    @gammas.shift() while @gammas.length > 150
-
-    @chart.render()
-
-
     data = @lastAccelData || {accelerationIncludingGravity: {x: 0, y: 0, z: 0}}
     @accelsX.push(x: x, y: data.accelerationIncludingGravity.x)
     @accelsY.push(x: x, y: data.accelerationIncludingGravity.y)
     @accelsZ.push(x: x, y: data.accelerationIncludingGravity.z)
 
-    @accelsX.shift() while @accelsX.length > 150
-    @accelsY.shift() while @accelsY.length > 150
-    @accelsZ.shift() while @accelsZ.length > 150
+    if @alphas.length > 150
+      @alphas.shift()
+      @betas.shift()
+      @gammas.shift()
+      @accelsX.shift()
+      @accelsY.shift()
+      @accelsZ.shift()
 
+    @chart.render()
     @chartAccel.render()
-
 
 
 $(document).ready ->

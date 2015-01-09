@@ -100,16 +100,6 @@
         x: x,
         y: data.gamma
       });
-      while (this.alphas.length > 150) {
-        this.alphas.shift();
-      }
-      while (this.betas.length > 150) {
-        this.betas.shift();
-      }
-      while (this.gammas.length > 150) {
-        this.gammas.shift();
-      }
-      this.chart.render();
       data = this.lastAccelData || {
         accelerationIncludingGravity: {
           x: 0,
@@ -129,15 +119,15 @@
         x: x,
         y: data.accelerationIncludingGravity.z
       });
-      while (this.accelsX.length > 150) {
+      if (this.alphas.length > 150) {
+        this.alphas.shift();
+        this.betas.shift();
+        this.gammas.shift();
         this.accelsX.shift();
-      }
-      while (this.accelsY.length > 150) {
         this.accelsY.shift();
-      }
-      while (this.accelsZ.length > 150) {
         this.accelsZ.shift();
       }
+      this.chart.render();
       return this.chartAccel.render();
     };
 
