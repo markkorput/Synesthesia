@@ -42,6 +42,23 @@
         beta: Math.random() * 360,
         gamma: Math.random() * 360
       });
+      this.clients.on('change:highlighted', function(model, value, obj) {
+        var m;
+        if (value === true) {
+          if (!_this.cursor) {
+            m = new Backbone.Model();
+            _this.cursor = new ClientOrient({
+              model: m,
+              wireframe: true
+            });
+            _this.scene.add(_this.cursor.mesh);
+          }
+          return _this.cursor.model.set({
+            position: model.get('position'),
+            orientation: model.get('orientation')
+          });
+        }
+      });
     }
 
     Orients.prototype.initScene = function() {
@@ -115,10 +132,19 @@
     function ClientOrient(opts) {
       this.options = opts || {};
       this.geometry = new THREE.CubeGeometry(10, 20, 2);
-      this.material = new THREE.MeshLambertMaterial({
-        color: 0xFF0000
-      });
+      if (opts.wireframe) {
+        this.material = new THREE.LineBasicMaterial({
+          color: 0xF0F0FF
+        });
+      } else {
+        this.material = new THREE.MeshLambertMaterial({
+          color: 0xFF0000
+        });
+      }
       this.mesh = new THREE.Mesh(this.geometry, this.material);
+      if (opts.wireframe) {
+        this.mesh.scale = new THREE.Vector3(1.2, 1.2, 1.2);
+      }
       this.model = opts.model;
       if (this.model) {
         this.model.on('change:orientation', this.update, this);
@@ -127,9 +153,14 @@
     }
 
     ClientOrient.prototype.update = function() {
+      var value;
       if (this.model) {
-        this.mesh.rotation.fromArray(this.model.get('orientation').toArray());
-        return this.mesh.position.fromArray(this.model.get('position').toArray());
+        if (value = this.model.get('orientation')) {
+          this.mesh.rotation.fromArray(value.toArray());
+        }
+        if (value = this.model.get('position')) {
+          return this.mesh.position.fromArray(value.toArray());
+        }
       }
     };
 

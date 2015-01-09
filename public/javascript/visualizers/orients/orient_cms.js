@@ -11,6 +11,17 @@
         collection: opts.clients
       });
       document.body.appendChild(this.view.el);
+      opts.clients.on('change:highlighted', function(model, value, obj) {
+        if (value === true) {
+          return this.each(function(m) {
+            if (m.cid !== model.cid) {
+              return m.set({
+                highlighted: false
+              });
+            }
+          });
+        }
+      });
     }
 
     return OrientCms;
@@ -66,6 +77,10 @@
 
     OrientCmsItemView.prototype.className = 'orient-cms-item-view';
 
+    OrientCmsItemView.prototype.events = {
+      'mouseover': '_onHover'
+    };
+
     OrientCmsItemView.prototype.initialize = function() {
       this.$el.append('<p id="orientation"></p>');
       this.$el.append('<p id="position"></p>');
@@ -82,9 +97,20 @@
       this.$el.find('p#orientation').text('Orientation: ' + _.map(this.model.get('orientation').toArray(), function(str) {
         return str.toString().substring(0, 5);
       }).join(', '));
-      return this.$el.find('p#position').text('Position: ' + _.map(this.model.get('position').toArray(), function(str) {
+      this.$el.find('p#position').text('Position: ' + _.map(this.model.get('position').toArray(), function(str) {
         return str.toString().substring(0, 5);
       }).join(', '));
+      if (this.model.get('highlighted') === true) {
+        return this.$el.addClass('highlighted');
+      } else {
+        return this.$el.removeClass('highlighted');
+      }
+    };
+
+    OrientCmsItemView.prototype._onHover = function(evt) {
+      return this.model.set({
+        highlighted: true
+      });
     };
 
     return OrientCmsItemView;

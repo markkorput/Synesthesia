@@ -4,6 +4,12 @@ class @OrientCms
         @view = new OrientCmsView(collection: opts.clients)
         document.body.appendChild( @view.el );
 
+        opts.clients.on 'change:highlighted', (model, value, obj) ->
+            if value == true
+                # 'this' is the collection scope
+                @each (m) ->
+                    m.set(highlighted: false) if m.cid != model.cid
+
 class OrientCmsView extends Backbone.View
     tagName: 'div'
     className: 'orient-cms-view'
@@ -27,6 +33,9 @@ class OrientCmsItemView extends Backbone.View
     tagName: 'div'
     className: 'orient-cms-item-view'
 
+    events:
+        'mouseover': '_onHover'
+
     initialize: ->
         @$el.append('<p id="orientation"></p>')
         @$el.append('<p id="position"></p>')
@@ -40,4 +49,10 @@ class OrientCmsItemView extends Backbone.View
         @$el.find('p#orientation').text 'Orientation: ' + _.map( @model.get('orientation').toArray(), (str) -> str.toString().substring(0, 5) ).join(', ')
         @$el.find('p#position').text 'Position: ' + _.map( @model.get('position').toArray(), (str) -> str.toString().substring(0, 5) ).join(', ')
 
+        if @model.get('highlighted') == true
+            @$el.addClass 'highlighted'
+        else
+            @$el.removeClass 'highlighted'
 
+    _onHover: (evt) ->
+        @model.set(highlighted: true)

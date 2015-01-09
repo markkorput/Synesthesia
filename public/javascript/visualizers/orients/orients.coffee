@@ -24,6 +24,15 @@ class Orients
 
         @processMotionData(cid: 102, alpha: Math.random()*360, beta: Math.random()*360, gamma: Math.random()*360)
 
+        @clients.on 'change:highlighted', (model, value, obj) =>
+            if value == true
+                if !@cursor
+                    m = new Backbone.Model()
+                    @cursor = new ClientOrient(model: m, wireframe: true)
+                    @scene.add @cursor.mesh
+
+                @cursor.model.set(position: model.get('position'), orientation: model.get('orientation'))
+
     initScene: ->
         # @camera = new THREE.PerspectiveCamera(75, window.innerWidth/window.innerHeight, 0.1, 10000);
         @camera = new THREE.PerspectiveCamera(45, window.innerWidth / window.innerHeight, 1, 1000)
@@ -79,13 +88,22 @@ class Orients
             clientOrient = new ClientOrient(model: model)
             @scene.add clientOrient.mesh
 
+
 class ClientOrient
     constructor: (opts) ->
         @options = opts || {}
 
         @geometry = new THREE.CubeGeometry 10, 20, 2
-        @material = new THREE.MeshLambertMaterial({color: 0xFF0000 })
+
+        if opts.wireframe
+            @material = new THREE.LineBasicMaterial(color: 0xF0F0FF)
+        else
+            @material = new THREE.MeshLambertMaterial(color: 0xFF0000)
+
         @mesh = new THREE.Mesh( @geometry, @material )
+
+        if opts.wireframe
+            @mesh.scale = new THREE.Vector3(1.2, 1.2, 1.2)
 
         @model = opts.model
 
@@ -95,6 +113,9 @@ class ClientOrient
 
     update: ->
         if @model
-            @mesh.rotation.fromArray @model.get('orientation').toArray()
-            @mesh.position.fromArray @model.get('position').toArray()
+            if value = @model.get('orientation')
+                @mesh.rotation.fromArray value.toArray()
+
+            if value = @model.get('position')
+                @mesh.position.fromArray value.toArray()
 

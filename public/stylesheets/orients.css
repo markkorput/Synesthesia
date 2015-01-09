@@ -34,3 +34,9 @@ p.small {
 .orient-cms-view {
   color: #000;
 }
+.orient-cms-item-view {
+  background-color: #fff;
+}
+.orient-cms-item-view.highlighted {
+  background-color: #f0f0ff;
+}
