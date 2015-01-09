@@ -1,0 +1,14 @@
+{
+  "inputs": [
+    "motionData",
+    "accelerationData"
+  ],
+  "extraJS": [
+    "/lib/THREE-r65.min.js", 
+    "/lib/ShaderParticles.min.js",
+    "/bower_components/jquery/jquery.min.js",
+    "/bower_components/underscore/underscore.js",
+    "/bower_components/backbone/backbone.js",
+    "/javascript/visualizers/particles/particles.js"
+  ]
+}
