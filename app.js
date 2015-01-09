@@ -190,9 +190,11 @@ dancer.on('connection', function (dancer) {
     tracking: state.motionTrack
   });
   dancer.on('motionData', function (data) {
+    data.cid = this.id;
     emitData('motionData', data);
   });
   dancer.on('accelerationData', function (data) {
+    data.cid = this.id;
     emitData('accelerationData', data);
   });
 });
