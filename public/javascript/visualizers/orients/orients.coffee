@@ -17,6 +17,13 @@ class Orients
         @initScene()
         @animate()
 
+        @processMotionData(cid: 100, alpha: Math.random()*360, beta: Math.random()*360, gamma: Math.random()*360)
+        @processMotionData(cid: 101, alpha: Math.random()*360, beta: Math.random()*360, gamma: Math.random()*360)
+
+        @cms = new OrientCms(clients: @clients)
+
+        @processMotionData(cid: 102, alpha: Math.random()*360, beta: Math.random()*360, gamma: Math.random()*360)
+
     initScene: ->
         # @camera = new THREE.PerspectiveCamera(75, window.innerWidth/window.innerHeight, 0.1, 10000);
         @camera = new THREE.PerspectiveCamera(45, window.innerWidth / window.innerHeight, 1, 1000)
@@ -34,9 +41,7 @@ class Orients
         @camera.position.set(0, 0, 300)
         @camera.lookAt @scene.position
 
-        @light = new THREE.PointLight(0xFF0000);
-        @light.position.x = 10;
-        @light.position.y = 50;
+        @light = new THREE.PointLight(0xFF0FF0)
         @light.position.copy @camera.position
         @light.position.x += 3
         @light.position.y += 3
@@ -68,12 +73,11 @@ class Orients
         if model = @clients.get(data.cid)
             model.set(orientation: vec3)
         else
-            model = new Backbone.Model(id: data.cid, orientation: vec3)
+            pos = new THREE.Vector3(-50+Math.random()*100,-50+Math.random()*100,0)
+            model = new Backbone.Model(id: data.cid, orientation: vec3, position: pos)
             @clients.add model
             clientOrient = new ClientOrient(model: model)
-            mesh = clientOrient.mesh
-            mesh.position.set(-50+Math.random()*100,-50+Math.random()*100,0)
-            @scene.add mesh
+            @scene.add clientOrient.mesh
 
 class ClientOrient
     constructor: (opts) ->
@@ -81,22 +85,16 @@ class ClientOrient
 
         @geometry = new THREE.CubeGeometry 10, 20, 2
         @material = new THREE.MeshLambertMaterial({color: 0xFF0000 })
-        @mesh = @_generateMesh()
+        @mesh = new THREE.Mesh( @geometry, @material )
 
         @model = opts.model
 
         if @model
             @model.on 'change:orientation', @update, this
             @update()
-            
-    _generateMesh: ->
-        mesh = new THREE.Mesh( @geometry, @material )
-        # mesh.position.x = 0
-        # mesh.position.y = 0
-        # mesh.position.z = @camera.position.z - 100
-        mesh
 
     update: ->
         if @model
             @mesh.rotation.fromArray @model.get('orientation').toArray()
+            @mesh.position.fromArray @model.get('position').toArray()
 

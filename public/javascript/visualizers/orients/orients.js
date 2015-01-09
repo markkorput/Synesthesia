@@ -21,6 +21,27 @@
       this.clients = new Backbone.Collection();
       this.initScene();
       this.animate();
+      this.processMotionData({
+        cid: 100,
+        alpha: Math.random() * 360,
+        beta: Math.random() * 360,
+        gamma: Math.random() * 360
+      });
+      this.processMotionData({
+        cid: 101,
+        alpha: Math.random() * 360,
+        beta: Math.random() * 360,
+        gamma: Math.random() * 360
+      });
+      this.cms = new OrientCms({
+        clients: this.clients
+      });
+      this.processMotionData({
+        cid: 102,
+        alpha: Math.random() * 360,
+        beta: Math.random() * 360,
+        gamma: Math.random() * 360
+      });
     }
 
     Orients.prototype.initScene = function() {
@@ -32,9 +53,7 @@
       this.scene = new THREE.Scene();
       this.camera.position.set(0, 0, 300);
       this.camera.lookAt(this.scene.position);
-      this.light = new THREE.PointLight(0xFF0000);
-      this.light.position.x = 10;
-      this.light.position.y = 50;
+      this.light = new THREE.PointLight(0xFF0FF0);
       this.light.position.copy(this.camera.position);
       this.light.position.x += 3;
       this.light.position.y += 3;
@@ -67,24 +86,24 @@
     };
 
     Orients.prototype.processMotionData = function(data) {
-      var clientOrient, mesh, model, vec3;
+      var clientOrient, model, pos, vec3;
       vec3 = new THREE.Vector3(data.beta / 180 * Math.PI, data.alpha / 180 * Math.PI, -data.gamma / 180 * Math.PI);
       if (model = this.clients.get(data.cid)) {
         return model.set({
           orientation: vec3
         });
       } else {
+        pos = new THREE.Vector3(-50 + Math.random() * 100, -50 + Math.random() * 100, 0);
         model = new Backbone.Model({
           id: data.cid,
-          orientation: vec3
+          orientation: vec3,
+          position: pos
         });
         this.clients.add(model);
         clientOrient = new ClientOrient({
           model: model
         });
-        mesh = clientOrient.mesh;
-        mesh.position.set(-50 + Math.random() * 100, -50 + Math.random() * 100, 0);
-        return this.scene.add(mesh);
+        return this.scene.add(clientOrient.mesh);
       }
     };
 
@@ -99,7 +118,7 @@
       this.material = new THREE.MeshLambertMaterial({
         color: 0xFF0000
       });
-      this.mesh = this._generateMesh();
+      this.mesh = new THREE.Mesh(this.geometry, this.material);
       this.model = opts.model;
       if (this.model) {
         this.model.on('change:orientation', this.update, this);
@@ -107,15 +126,10 @@
       }
     }
 
-    ClientOrient.prototype._generateMesh = function() {
-      var mesh;
-      mesh = new THREE.Mesh(this.geometry, this.material);
-      return mesh;
-    };
-
     ClientOrient.prototype.update = function() {
       if (this.model) {
-        return this.mesh.rotation.fromArray(this.model.get('orientation').toArray());
+        this.mesh.rotation.fromArray(this.model.get('orientation').toArray());
+        return this.mesh.position.fromArray(this.model.get('position').toArray());
       }
     };
 
