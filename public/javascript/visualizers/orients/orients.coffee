@@ -20,7 +20,6 @@ class Orients
     initScene: ->
         # @camera = new THREE.PerspectiveCamera(75, window.innerWidth/window.innerHeight, 0.1, 10000);
         @camera = new THREE.PerspectiveCamera(45, window.innerWidth / window.innerHeight, 1, 1000)
-        # @camera.lookAt @scene.position
         @renderer = new THREE.WebGLRenderer();
         # @renderer.setClearColor(0x000000);
         # @clock = new THREE.Clock();
@@ -31,6 +30,9 @@ class Orients
         document.body.appendChild( @renderer.domElement );
 
         @scene = new THREE.Scene()
+
+        @camera.position.set(0, 0, 300)
+        @camera.lookAt @scene.position
 
         @light = new THREE.PointLight(0xFF0000);
         @light.position.x = 10;
@@ -70,19 +72,14 @@ class Orients
             @clients.add model
             clientOrient = new ClientOrient(model: model)
             mesh = clientOrient.mesh
-            mesh.position.copy @camera.position
-            mesh.position.add new THREE.Vector3(0,0, -150)
+            mesh.position.set(-50+Math.random()*100,-50+Math.random()*100,0)
             @scene.add mesh
-            @mesh = mesh
-
-
-
 
 class ClientOrient
     constructor: (opts) ->
         @options = opts || {}
 
-        @geometry = new THREE.CubeGeometry 20, 5, 40
+        @geometry = new THREE.CubeGeometry 10, 20, 2
         @material = new THREE.MeshLambertMaterial({color: 0xFF0000 })
         @mesh = @_generateMesh()
 

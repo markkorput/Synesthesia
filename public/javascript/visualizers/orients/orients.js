@@ -30,6 +30,8 @@
       $(window).resize(this._resize);
       document.body.appendChild(this.renderer.domElement);
       this.scene = new THREE.Scene();
+      this.camera.position.set(0, 0, 300);
+      this.camera.lookAt(this.scene.position);
       this.light = new THREE.PointLight(0xFF0000);
       this.light.position.x = 10;
       this.light.position.y = 50;
@@ -81,10 +83,8 @@
           model: model
         });
         mesh = clientOrient.mesh;
-        mesh.position.copy(this.camera.position);
-        mesh.position.add(new THREE.Vector3(0, 0, -150));
-        this.scene.add(mesh);
-        return this.mesh = mesh;
+        mesh.position.set(-50 + Math.random() * 100, -50 + Math.random() * 100, 0);
+        return this.scene.add(mesh);
       }
     };
 
@@ -95,7 +95,7 @@
   ClientOrient = (function() {
     function ClientOrient(opts) {
       this.options = opts || {};
-      this.geometry = new THREE.CubeGeometry(20, 5, 40);
+      this.geometry = new THREE.CubeGeometry(10, 20, 2);
       this.material = new THREE.MeshLambertMaterial({
         color: 0xFF0000
       });
