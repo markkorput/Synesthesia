@@ -1,0 +1,26 @@
+doctype html
+html
+  head
+    title Dancer Motion Tracker 
+    meta(http-equiv="content-type", content="text/html; charset=utf-8")
+    meta(name="viewport", content="width=device-width, user-scalable=no, minimum-scale=1.0, maximum-scale=1.0")
+    meta(name="apple-mobile-web-app-capable", content="yes")
+    meta(name="mobile-web-app-capable", content="yes")
+    meta(name="apple-mobile-web-app-status-bar-style", content="black")
+      
+    link(rel="stylesheet", href="/stylesheets/orienter.css")
+
+    script(src="/socket.io/socket.io.js")
+    script(src="/bower_components/jquery/jquery.min.js")
+
+
+  body
+    h1 Connecting...
+    h2#orientation No orientation data yet
+    h2#acceleration No acceleration data yet
+
+    script(src="javascript/orienter/orienter.js")
+    script.
+      $(document).on('touchmove', function(e) {
+        e.preventDefault();
+      });

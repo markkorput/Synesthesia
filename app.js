@@ -109,6 +109,7 @@ var conductor = io.of('/conductor');
 var conductor2 = io.of('/conductor2');
 var clients = io.of('/client');
 var dancer = io.of('/dancer');
+var orienter = io.of('/orienter');
 var audio = io.of('/audio');
 var opticalFlow = io.of('/opticalFlow');
 // var linedance = io.of('/linedance');
@@ -201,6 +202,29 @@ dancer.on('connection', function (dancer) {
 });
 
 //////////////////////////////////////////
+/// Orienter / Motion Tracker events
+//////////////////////////////////////////
+
+orienter.on('connection', function (o) {
+  console.log('orienter connection');
+  o.emit('welcome', {
+    message: "Connected for motion tracking.",
+    tracking: state.motionTrack
+  });
+  console.log('orienter welcomed');
+  o.on('motionData', function (data) {
+    data.cid = this.id;
+    emitData('motionData', data);
+    console.log('orienter gave motion data');
+  });
+  o.on('accelerationData', function (data) {
+    data.cid = this.id;
+    emitData('accelerationData', data);
+    console.log('orienter fave accel data');
+  });
+});
+
+//////////////////////////////////////////
 /// Conductor events
 //////////////////////////////////////////
 
@@ -231,13 +255,15 @@ conductor.on('connection', function (conductor) {
   });
 
   conductor.on('toggleMotion', function (data){
-    var dancer = io.of('/dancer');
     if (data.motion) {
       state.motionTrack = true;
     } else if (!data.paint) {
       state.motionTrack = false;
     }
+    var dancer = io.of('/dancer');
     dancer.emit('toggleMotion', data);
+    var orienter = io.of('/orienter');
+    orienter.emit('toggleMotion', data);
   });
 
   conductor.on('toggleStrobe', function (data){

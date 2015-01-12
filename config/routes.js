@@ -9,6 +9,7 @@ exports.inputRoutes = [
   'opticalFlow',
   'fone',
   'dancer',
+  'orienter',
   'update',
   'gridcontrol'
 ];

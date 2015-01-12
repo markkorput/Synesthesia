@@ -1,0 +1,64 @@
+* {
+  font-family: Sans-serif;
+}
+html,
+body {
+  width: 100%;
+  overflow: hidden;
+  padding: 0;
+  margin: 0;
+  background-color: #000;
+}
+h1,
+#alpha,
+#beta,
+#gamma {
+  margin: 0;
+  padding: 10px 0 10px 0;
+  text-align: center;
+  color: #fff;
+  text-decoration: underline;
+  padding-bottom: 5px;
+}
+h2 {
+  margin: 0;
+  padding: 0;
+  text-align: center;
+  color: #fff;
+}
+h3 {
+  margin: 0;
+  padding: 10px 0 0px 0;
+  text-align: center;
+  color: #65e342;
+  font-size: 16px;
+}
+p {
+  padding: 0px;
+  margin: 0;
+  font-size: 18px;
+  color: #fff;
+  text-align: center;
+}
+button {
+  margin: 20px auto;
+  display: block;
+  width: 75%;
+  height: 50px;
+  border: 1px solid #aaa;
+  border-radius: 10px;
+  border-bottom: 3px solid #bbb;
+  font-size: 16px;
+  color: #fff;
+  background-color: #8f0d23;
+}
+div {
+  text-align: center;
+}
+.touchbox {
+  height: 50em;
+  width: 50em;
+  background-color: #fff;
+  margin: auto;
+  text-align: center;
+}
