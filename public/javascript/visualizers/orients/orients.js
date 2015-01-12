@@ -43,20 +43,12 @@
         gamma: Math.random() * 360
       });
       this.clients.on('change:highlighted', function(model, value, obj) {
-        var m;
-        if (value === true) {
-          if (!_this.cursor) {
-            m = new Backbone.Model();
-            _this.cursor = new ClientOrient({
-              model: m,
-              wireframe: true
-            });
-            _this.scene.add(_this.cursor.mesh);
+        if (model.clientOrient) {
+          if (value === true) {
+            return model.clientOrient.mesh.material.color.setHex(0xBBBBFF);
+          } else {
+            return model.clientOrient.mesh.material.color.setHex(0xFF0000);
           }
-          return _this.cursor.model.set({
-            position: model.get('position'),
-            orientation: model.get('orientation')
-          });
         }
       });
     }
@@ -70,7 +62,7 @@
       this.scene = new THREE.Scene();
       this.camera.position.set(0, 0, 300);
       this.camera.lookAt(this.scene.position);
-      this.light = new THREE.PointLight(0xFF0FF0);
+      this.light = new THREE.PointLight(0xFFFFFF);
       this.light.position.copy(this.camera.position);
       this.light.position.x += 3;
       this.light.position.y += 3;
@@ -120,6 +112,7 @@
         clientOrient = new ClientOrient({
           model: model
         });
+        model.clientOrient = clientOrient;
         return this.scene.add(clientOrient.mesh);
       }
     };
@@ -132,19 +125,10 @@
     function ClientOrient(opts) {
       this.options = opts || {};
       this.geometry = new THREE.CubeGeometry(10, 20, 2);
-      if (opts.wireframe) {
-        this.material = new THREE.LineBasicMaterial({
-          color: 0xF0F0FF
-        });
-      } else {
-        this.material = new THREE.MeshLambertMaterial({
-          color: 0xFF0000
-        });
-      }
+      this.material = new THREE.MeshLambertMaterial({
+        color: 0xFF0000
+      });
       this.mesh = new THREE.Mesh(this.geometry, this.material);
-      if (opts.wireframe) {
-        this.mesh.scale = new THREE.Vector3(1.2, 1.2, 1.2);
-      }
       this.model = opts.model;
       if (this.model) {
         this.model.on('change:orientation', this.update, this);

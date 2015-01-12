@@ -56,6 +56,7 @@ var visualizers = (function() {
   var visualizers = [];
 
   dirs.forEach(function(dirname){
+    if(dirname == '.DS_Store') return;
     var configFile = parentDir + '/' + dirname + '/config.json';
     var configObj = require(configFile);
 

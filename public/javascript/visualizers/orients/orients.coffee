@@ -25,13 +25,11 @@ class Orients
         @processMotionData(cid: 102, alpha: Math.random()*360, beta: Math.random()*360, gamma: Math.random()*360)
 
         @clients.on 'change:highlighted', (model, value, obj) =>
-            if value == true
-                if !@cursor
-                    m = new Backbone.Model()
-                    @cursor = new ClientOrient(model: m, wireframe: true)
-                    @scene.add @cursor.mesh
-
-                @cursor.model.set(position: model.get('position'), orientation: model.get('orientation'))
+            if model.clientOrient
+                if value == true
+                    model.clientOrient.mesh.material.color.setHex(0xBBBBFF)
+                else
+                    model.clientOrient.mesh.material.color.setHex(0xFF0000)
 
     initScene: ->
         # @camera = new THREE.PerspectiveCamera(75, window.innerWidth/window.innerHeight, 0.1, 10000);
@@ -50,7 +48,7 @@ class Orients
         @camera.position.set(0, 0, 300)
         @camera.lookAt @scene.position
 
-        @light = new THREE.PointLight(0xFF0FF0)
+        @light = new THREE.PointLight(0xFFFFFF)
         @light.position.copy @camera.position
         @light.position.x += 3
         @light.position.y += 3
@@ -86,6 +84,7 @@ class Orients
             model = new Backbone.Model(id: data.cid, orientation: vec3, position: pos)
             @clients.add model
             clientOrient = new ClientOrient(model: model)
+            model.clientOrient = clientOrient
             @scene.add clientOrient.mesh
 
 
@@ -94,17 +93,9 @@ class ClientOrient
         @options = opts || {}
 
         @geometry = new THREE.CubeGeometry 10, 20, 2
-
-        if opts.wireframe
-            @material = new THREE.LineBasicMaterial(color: 0xF0F0FF)
-        else
-            @material = new THREE.MeshLambertMaterial(color: 0xFF0000)
+        @material = new THREE.MeshLambertMaterial(color: 0xFF0000)
 
         @mesh = new THREE.Mesh( @geometry, @material )
-
-        if opts.wireframe
-            @mesh.scale = new THREE.Vector3(1.2, 1.2, 1.2)
-
         @model = opts.model
 
         if @model
