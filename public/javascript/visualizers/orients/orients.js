@@ -33,9 +33,6 @@
         beta: Math.random() * 360,
         gamma: Math.random() * 360
       });
-      this.cms = new OrientCms({
-        clients: this.clients
-      });
       this.processMotionData({
         cid: 102,
         alpha: Math.random() * 360,
@@ -51,6 +48,10 @@
           }
         }
       });
+      this.cms = new OrientCms({
+        clients: this.clients
+      });
+      this.initGlobalTarget();
     }
 
     Orients.prototype.initScene = function() {
@@ -69,13 +70,37 @@
       return this.scene.add(this.light);
     };
 
+    Orients.prototype.initGlobalTarget = function() {
+      var geometry, material,
+        _this = this;
+      this.globalTargetRotator = new THREE.Object3D();
+      this.globalTargetRotator.position.set(0, 0, 0);
+      geometry = new THREE.SphereGeometry(10);
+      material = new THREE.MeshLambertMaterial({
+        color: 0x00FF00
+      });
+      this.globalTargetMesh = new THREE.Mesh(geometry, material);
+      this.globalTargetMesh.position.set(0, 80, 0);
+      this.globalTargetRotator.add(this.globalTargetMesh);
+      this.scene.add(this.globalTargetRotator);
+      return this.cms.targetControlView.model.on('change:orientationValue', function(model, value, obj) {
+        return _this.globalTargetRotator.rotation.z = value / 180 * Math.PI;
+      });
+    };
+
+    Orients.prototype.updateGlobalTarget = function() {
+      if (!this.cms || !this.cms.targetControlView || !this.cms.targetControlView.model) {
+
+      }
+    };
+
     Orients.prototype._resize = function(event) {
       if (this.camera) {
         this.camera.aspect = window.innerWidth / window.innerHeight;
         this.camera.updateProjectionMatrix();
       }
       if (this.renderer) {
-        return this.renderer.setSize(window.innerWidth, window.innerHeight);
+        return this.renderer.setSize(window.innerWidth, window.innerHeight * 0.7);
       }
     };
 
@@ -84,11 +109,8 @@
       requestAnimationFrame(function() {
         return _this.animate();
       });
-      this.update(0.032);
       return this.draw();
     };
-
-    Orients.prototype.update = function(dt) {};
 
     Orients.prototype.draw = function() {
       return this.renderer.render(this.scene, this.camera);

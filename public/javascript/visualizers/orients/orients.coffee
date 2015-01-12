@@ -19,9 +19,6 @@ class Orients
 
         @processMotionData(cid: 100, alpha: Math.random()*360, beta: Math.random()*360, gamma: Math.random()*360)
         @processMotionData(cid: 101, alpha: Math.random()*360, beta: Math.random()*360, gamma: Math.random()*360)
-
-        @cms = new OrientCms(clients: @clients)
-
         @processMotionData(cid: 102, alpha: Math.random()*360, beta: Math.random()*360, gamma: Math.random()*360)
 
         @clients.on 'change:highlighted', (model, value, obj) =>
@@ -30,6 +27,9 @@ class Orients
                     model.clientOrient.mesh.material.color.setHex(0xBBBBFF)
                 else
                     model.clientOrient.mesh.material.color.setHex(0xFF0000)
+
+        @cms = new OrientCms(clients: @clients)
+        @initGlobalTarget()
 
     initScene: ->
         # @camera = new THREE.PerspectiveCamera(75, window.innerWidth/window.innerHeight, 0.1, 10000);
@@ -54,22 +54,40 @@ class Orients
         @light.position.y += 3
         @scene.add( @light )
 
+    initGlobalTarget: ->
+        @globalTargetRotator = new THREE.Object3D()
+        @globalTargetRotator.position.set(0,0,0)
+
+        geometry = new THREE.SphereGeometry 10
+        material = new THREE.MeshLambertMaterial(color: 0x00FF00)
+        @globalTargetMesh = new THREE.Mesh(geometry, material)
+        @globalTargetMesh.position.set(0, 80, 0)
+        @globalTargetRotator.add @globalTargetMesh
+        @scene.add @globalTargetRotator
+
+        @cms.targetControlView.model.on 'change:orientationValue', (model, value, obj) =>
+            @globalTargetRotator.rotation.z = value / 180 * Math.PI
+
+    updateGlobalTarget: ->
+        return if !@cms || !@cms.targetControlView || !@cms.targetControlView.model
+
+
     _resize: (event) ->
         if @camera
             @camera.aspect = window.innerWidth / window.innerHeight
             @camera.updateProjectionMatrix()
 
         if @renderer
-            @renderer.setSize( window.innerWidth, window.innerHeight )
+            @renderer.setSize( window.innerWidth, window.innerHeight * 0.7 )
 
     animate: ->
         requestAnimationFrame =>
             @animate()
 
-        @update(0.032) # 30fps
+        # @update(0.032) # 30fps
         @draw()
 
-    update: (dt) ->
+    # update: (dt) ->
 
     draw: ->
         @renderer.render @scene, @camera

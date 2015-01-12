@@ -1,6 +1,11 @@
 class @OrientCms
     constructor: (opts) ->
         @options = opts || {}
+
+        targetControlModel = new Backbone.Model(orientationValue: 0)
+        @targetControlView = new OrientGlobalTargetControlView(model: targetControlModel)
+        document.body.appendChild( @targetControlView.el );
+
         @view = new OrientCmsView(collection: opts.clients)
         document.body.appendChild( @view.el );
 
@@ -9,6 +14,33 @@ class @OrientCms
                 # 'this' is the collection scope
                 @each (m) ->
                     m.set(highlighted: false) if m.cid != model.cid
+
+
+class OrientGlobalTargetControlView extends Backbone.View
+    tgName: 'div'
+    className: 'orient-global-target-control-view'
+
+    events:
+        # 'change #slider': 'sliderChanged'
+        'mousemove #slider': 'sliderChanged'
+
+    initialize: ->
+        # create DOM elements
+        @$el.append('<span id="display">0</span><input type="range" id="slider" value="0" min="0" max="360">')
+
+        # initialize elements and create hooks to auto update on changes
+        if @model
+            @updateValues()
+            @model.on 'change', @updateValues, this
+
+    updateValues: ->
+        return if !@model
+        @$el.find('#slider').val(@model.get('orientationValue'))
+        @$el.find('#display').text(@model.get('orientationValue'))
+
+    sliderChanged: (event) ->
+        return if !@model
+        @model.set(orientationValue: $(event.target).val())
 
 class OrientCmsView extends Backbone.View
     tagName: 'div'
