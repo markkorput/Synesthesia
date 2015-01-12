@@ -206,21 +206,17 @@ dancer.on('connection', function (dancer) {
 //////////////////////////////////////////
 
 orienter.on('connection', function (o) {
-  console.log('orienter connection');
   o.emit('welcome', {
     message: "Connected for motion tracking.",
     tracking: state.motionTrack
   });
-  console.log('orienter welcomed');
   o.on('motionData', function (data) {
     data.cid = this.id;
     emitData('motionData', data);
-    console.log('orienter gave motion data');
   });
   o.on('accelerationData', function (data) {
     data.cid = this.id;
     emitData('accelerationData', data);
-    console.log('orienter fave accel data');
   });
 });
 
