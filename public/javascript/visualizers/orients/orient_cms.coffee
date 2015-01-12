@@ -9,12 +9,17 @@ class @OrientCms
         @view = new OrientCmsView(collection: opts.clients)
         document.body.appendChild( @view.el );
 
+        # when a client gets highlighted, "UNhighlight" all others
         opts.clients.on 'change:highlighted', (model, value, obj) ->
             if value == true
                 # 'this' is the collection scope
                 @each (m) ->
                     m.set(highlighted: false) if m.cid != model.cid
 
+        # when global target control model's value changes, propagate this change to all client models
+        targetControlModel.on 'change:orientationValue', (model, val, obj) =>
+            @view.collection.each (clientModel) =>
+                clientModel.set(targetOrientationValue: val)
 
 class OrientGlobalTargetControlView extends Backbone.View
     tgName: 'div'
@@ -42,6 +47,7 @@ class OrientGlobalTargetControlView extends Backbone.View
         return if !@model
         @model.set(orientationValue: $(event.target).val())
 
+
 class OrientCmsView extends Backbone.View
     tagName: 'div'
     className: 'orient-cms-view'
@@ -61,6 +67,7 @@ class OrientCmsView extends Backbone.View
         model.cmsView = view
         @$el.append view.el
 
+
 class OrientCmsItemView extends Backbone.View
     tagName: 'div'
     className: 'orient-cms-item-view'
@@ -71,6 +78,8 @@ class OrientCmsItemView extends Backbone.View
     initialize: ->
         @$el.append('<p id="orientation"></p>')
         @$el.append('<p id="position"></p>')
+        @$el.append('<p id="targetOrientationValue"></p>')
+
         @updateValues()
 
         if @model
@@ -80,6 +89,7 @@ class OrientCmsItemView extends Backbone.View
         return if !@model
         @$el.find('p#orientation').text 'Orientation: ' + _.map( @model.get('orientation').toArray(), (str) -> str.toString().substring(0, 5) ).join(', ')
         @$el.find('p#position').text 'Position: ' + _.map( @model.get('position').toArray(), (str) -> str.toString().substring(0, 5) ).join(', ')
+        @$el.find('p#targetOrientationValue').text('targetOrientationValue: ' + @model.get('targetOrientationValue')/180*Math.PI)
 
         if @model.get('highlighted') == true
             @$el.addClass 'highlighted'

@@ -6,7 +6,8 @@
 
   this.OrientCms = (function() {
     function OrientCms(opts) {
-      var targetControlModel;
+      var targetControlModel,
+        _this = this;
       this.options = opts || {};
       targetControlModel = new Backbone.Model({
         orientationValue: 0
@@ -29,6 +30,13 @@
             }
           });
         }
+      });
+      targetControlModel.on('change:orientationValue', function(model, val, obj) {
+        return _this.view.collection.each(function(clientModel) {
+          return clientModel.set({
+            targetOrientationValue: val
+          });
+        });
       });
     }
 
@@ -137,6 +145,7 @@
     OrientCmsItemView.prototype.initialize = function() {
       this.$el.append('<p id="orientation"></p>');
       this.$el.append('<p id="position"></p>');
+      this.$el.append('<p id="targetOrientationValue"></p>');
       this.updateValues();
       if (this.model) {
         return this.model.on('change', this.updateValues, this);
@@ -153,6 +162,7 @@
       this.$el.find('p#position').text('Position: ' + _.map(this.model.get('position').toArray(), function(str) {
         return str.toString().substring(0, 5);
       }).join(', '));
+      this.$el.find('p#targetOrientationValue').text('targetOrientationValue: ' + this.model.get('targetOrientationValue') / 180 * Math.PI);
       if (this.model.get('highlighted') === true) {
         return this.$el.addClass('highlighted');
       } else {
