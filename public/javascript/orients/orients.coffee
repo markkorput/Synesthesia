@@ -10,7 +10,6 @@ class Orients
             console.log "Orients welcomed", data
 
         @server.on 'motionData', (data) =>
-            console.log 'got motion data: ', data
             @processMotionData(data)
 
         @clients = new Backbone.Collection()

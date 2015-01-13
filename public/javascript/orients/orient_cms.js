@@ -40,7 +40,6 @@
         });
       });
       this.view.collection.on('change:targetOrientationValue', function(model, value, obj) {
-        console.log('server: ', _this.server);
         return _this.server.emit('targetOrientationValue', {
           sessionId: model.id,
           value: value

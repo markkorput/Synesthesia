@@ -15,7 +15,6 @@
         return console.log("Orients welcomed", data);
       });
       this.server.on('motionData', function(data) {
-        console.log('got motion data: ', data);
         return _this.processMotionData(data);
       });
       this.clients = new Backbone.Collection();

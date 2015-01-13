@@ -24,7 +24,6 @@ class @OrientCms
                 clientModel.set(targetOrientationValue: val)
 
         @view.collection.on 'change:targetOrientationValue', (model, value, obj) =>
-            console.log 'server: ', @server
             @server.emit('targetOrientationValue', sessionId: model.id, value: value)
             
 
