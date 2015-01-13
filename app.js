@@ -109,6 +109,7 @@ var conductor = io.of('/conductor');
 var conductor2 = io.of('/conductor2');
 var clients = io.of('/client');
 var dancer = io.of('/dancer');
+var orients = io.of('/orients');
 var orienter = io.of('/orienter');
 var audio = io.of('/audio');
 var opticalFlow = io.of('/opticalFlow');
@@ -204,8 +205,8 @@ dancer.on('connection', function (dancer) {
 //////////////////////////////////////////
 /// Orienter / Motion Tracker events
 //////////////////////////////////////////
-
 orienter.on('connection', function (o) {
+  o.emit('sessionId', o.id);
   o.emit('welcome', {
     message: "Connected for motion tracking.",
     tracking: state.motionTrack
@@ -213,12 +214,37 @@ orienter.on('connection', function (o) {
   o.on('motionData', function (data) {
     data.cid = this.id;
     emitData('motionData', data);
+    orients.emit('motionData', data);
   });
   o.on('accelerationData', function (data) {
     data.cid = this.id;
     emitData('accelerationData', data);
+    orients.emit('accelerationData', data);
   });
 });
+
+//////////////////////////////////////////
+/// Orients / Visualizer and Controller
+//////////////////////////////////////////
+orients.on('connection', function (o) {
+  o.emit('welcome', {
+    message: "Connected.",
+    // tracking: state.motionTrack
+  });
+
+  // o.on('motionData', function (data) {
+  //   data.cid = this.id;
+  //   emitData('motionData', data);
+  // });
+  // o.on('accelerationData', function (data) {
+  //   data.cid = this.id;
+  //   emitData('accelerationData', data);
+  // });
+  o.on('targetOrientationValue', function(data){
+    orienter.emit('targetOrientationValue', data);
+  });
+});
+
 
 //////////////////////////////////////////
 /// Conductor events

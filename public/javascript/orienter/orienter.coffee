@@ -5,10 +5,16 @@ class Orienter
   constructor: (opts) ->
     @options = opts || {}
 
-    @server = io.connect '/dancer'
+    @server = io.connect '/orienter'
     @$h1 = $('h1')
+    @session_el = $('#session_id')
     @orientation_el = $('#orientation')
     @acceleration_el = $('#acceleration')
+    @target_el = $('#target')
+
+    @server.on 'sessionId', (data) =>
+      @session_id = data
+      @session_el.text('Session ID: ' + data)
 
     @server.on 'welcome', (data) =>
       if data.tracking
@@ -24,6 +30,10 @@ class Orienter
         @setupTracking()
       else
         @setupTracking(false)
+
+    @server.on 'targetOrientationValue', (data) =>
+      return if data.sessionId != @session_id # not for us
+      @target_el.text 'Target: '+data.value
 
   setupTracking: (_setup) ->
     @setupMotionListener(_setup)

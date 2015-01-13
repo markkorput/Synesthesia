@@ -13,10 +13,16 @@
       this.onDeviceMotion = __bind(this.onDeviceMotion, this);
       var _this = this;
       this.options = opts || {};
-      this.server = io.connect('/dancer');
+      this.server = io.connect('/orienter');
       this.$h1 = $('h1');
+      this.session_el = $('#session_id');
       this.orientation_el = $('#orientation');
       this.acceleration_el = $('#acceleration');
+      this.target_el = $('#target');
+      this.server.on('sessionId', function(data) {
+        _this.session_id = data;
+        return _this.session_el.text('Session ID: ' + data);
+      });
       this.server.on('welcome', function(data) {
         if (data.tracking) {
           return _this.setupTracking();
@@ -33,6 +39,12 @@
         } else {
           return _this.setupTracking(false);
         }
+      });
+      this.server.on('targetOrientationValue', function(data) {
+        if (data.sessionId !== _this.session_id) {
+          return;
+        }
+        return _this.target_el.text('Target: ' + data.value);
       });
     }
 

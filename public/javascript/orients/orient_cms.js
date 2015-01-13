@@ -9,6 +9,7 @@
       var targetControlModel,
         _this = this;
       this.options = opts || {};
+      this.server = opts.server;
       targetControlModel = new Backbone.Model({
         orientationValue: 0
       });
@@ -36,6 +37,13 @@
           return clientModel.set({
             targetOrientationValue: val
           });
+        });
+      });
+      this.view.collection.on('change:targetOrientationValue', function(model, value, obj) {
+        console.log('server: ', _this.server);
+        return _this.server.emit('targetOrientationValue', {
+          sessionId: model.id,
+          value: value
         });
       });
     }

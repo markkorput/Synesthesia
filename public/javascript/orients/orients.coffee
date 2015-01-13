@@ -4,13 +4,14 @@ $(document).ready ->
 class Orients
     constructor: (opts) ->
         @options = opts || {}
-        
-        server = io.connect('/motgraphs')
-        server.on 'welcome', (data) =>
+
+        @server = io.connect '/orients'
+        @server.on 'welcome', (data) =>
             console.log "Orients welcomed", data
 
-        server.on 'motionData', (data) =>
-          @processMotionData(data)
+        @server.on 'motionData', (data) =>
+            console.log 'got motion data: ', data
+            @processMotionData(data)
 
         @clients = new Backbone.Collection()
 
@@ -28,7 +29,7 @@ class Orients
                 else
                     model.clientOrient.mesh.material.color.setHex(0xFF0000)
 
-        @cms = new OrientCms(clients: @clients)
+        @cms = new OrientCms(clients: @clients, server: @server)
         @initGlobalTarget()
 
     initScene: ->

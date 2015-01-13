@@ -2,6 +2,8 @@ class @OrientCms
     constructor: (opts) ->
         @options = opts || {}
 
+        @server = opts.server
+
         targetControlModel = new Backbone.Model(orientationValue: 0)
         @targetControlView = new OrientGlobalTargetControlView(model: targetControlModel)
         document.body.appendChild( @targetControlView.el );
@@ -20,6 +22,14 @@ class @OrientCms
         targetControlModel.on 'change:orientationValue', (model, val, obj) =>
             @view.collection.each (clientModel) =>
                 clientModel.set(targetOrientationValue: val)
+
+        @view.collection.on 'change:targetOrientationValue', (model, value, obj) =>
+            console.log 'server: ', @server
+            @server.emit('targetOrientationValue', sessionId: model.id, value: value)
+            
+
+
+
 
 class OrientGlobalTargetControlView extends Backbone.View
     tgName: 'div'

@@ -9,6 +9,7 @@ exports.inputRoutes = [
   'opticalFlow',
   'fone',
   'dancer',
+  'orients',
   'orienter',
   'update',
   'gridcontrol'

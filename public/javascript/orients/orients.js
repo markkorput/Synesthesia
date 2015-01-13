@@ -8,14 +8,14 @@
 
   Orients = (function() {
     function Orients(opts) {
-      var server,
-        _this = this;
+      var _this = this;
       this.options = opts || {};
-      server = io.connect('/motgraphs');
-      server.on('welcome', function(data) {
+      this.server = io.connect('/orients');
+      this.server.on('welcome', function(data) {
         return console.log("Orients welcomed", data);
       });
-      server.on('motionData', function(data) {
+      this.server.on('motionData', function(data) {
+        console.log('got motion data: ', data);
         return _this.processMotionData(data);
       });
       this.clients = new Backbone.Collection();
@@ -49,7 +49,8 @@
         }
       });
       this.cms = new OrientCms({
-        clients: this.clients
+        clients: this.clients,
+        server: this.server
       });
       this.initGlobalTarget();
     }
