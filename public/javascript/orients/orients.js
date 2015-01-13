@@ -128,13 +128,18 @@
 
   ClientOrient = (function() {
     function ClientOrient(opts) {
+      var geometry, material, subgeometry;
       this.options = opts || {};
-      this.geometry = new THREE.CubeGeometry(10, 2, 20);
-      this.material = new THREE.MeshLambertMaterial({
+      geometry = new THREE.CubeGeometry(10, 2, 20);
+      material = new THREE.MeshLambertMaterial({
         color: 0xFF0000
       });
-      this.mesh = new THREE.Mesh(this.geometry, this.material);
+      this.mesh = new THREE.Mesh(geometry, material);
       this.model = opts.model;
+      subgeometry = new THREE.CubeGeometry(2, 2, 10);
+      this.submesh = new THREE.Mesh(subgeometry, material);
+      this.submesh.position.set(0, 0, 10);
+      this.mesh.add(this.submesh);
       if (this.model) {
         this.model.on('change:orientation', this.update, this);
         this.update();

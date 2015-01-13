@@ -110,11 +110,16 @@ class ClientOrient
     constructor: (opts) ->
         @options = opts || {}
 
-        @geometry = new THREE.CubeGeometry 10, 2, 20
-        @material = new THREE.MeshLambertMaterial(color: 0xFF0000)
+        geometry = new THREE.CubeGeometry 10, 2, 20
+        material = new THREE.MeshLambertMaterial(color: 0xFF0000)
 
-        @mesh = new THREE.Mesh( @geometry, @material )
+        @mesh = new THREE.Mesh( geometry, material )
         @model = opts.model
+
+        subgeometry = new THREE.CubeGeometry 2, 2, 10
+        @submesh = new THREE.Mesh( subgeometry, material )
+        @submesh.position.set(0, 0, 10)
+        @mesh.add @submesh
 
         if @model
             @model.on 'change:orientation', @update, this
