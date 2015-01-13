@@ -25,10 +25,9 @@ class @OrientCms
 
         @view.collection.on 'change:targetOrientationValue', (model, value, obj) =>
             @server.emit('targetOrientationValue', sessionId: model.id, value: value)
-            
 
-
-
+        @view.collection.on 'add', (model) =>
+            model.set(targetOrientationValue: targetControlModel.get('orientationValue'))
 
 class OrientGlobalTargetControlView extends Backbone.View
     tgName: 'div'

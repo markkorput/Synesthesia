@@ -45,6 +45,11 @@
           value: value
         });
       });
+      this.view.collection.on('add', function(model) {
+        return model.set({
+          targetOrientationValue: targetControlModel.get('orientationValue')
+        });
+      });
     }
 
     return OrientCms;
