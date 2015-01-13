@@ -12,6 +12,10 @@ class Orienter
     @acceleration_el = $('#acceleration')
     @target_el = $('#target')
     @current_el = $('#current')
+    @distance_el = $('#distance')
+
+    @currentVal = 0
+    @targetVal = 0
 
     @server.on 'sessionId', (data) =>
       @session_id = data
@@ -34,7 +38,30 @@ class Orienter
 
     @server.on 'targetOrientationValue', (data) =>
       return if data.sessionId != @session_id # not for us
-      @target_el.text 'Target: '+data.value
+      @targetVal = data.value
+      @target_el.text 'Target: ' + @targetVal
+      @updateDistance()
+
+
+    @twoEl = document.getElementById('anim');
+    @two = new Two(fullscreen: true).appendTo(@twoEl)
+
+    @c1 = @two.makeCircle(0, 0, Math.min(@two.width*0.3, @two.height*0.3))
+    @c1.translation.set(@two.width/2, @two.height/2)
+    @c1.fill = 'black'
+    @c1.noStroke()
+    @c1.opacity = 0.5
+    @circle = @two.makeCircle(0, -Math.min(@two.width*0.3, @two.height*0.3), 10)
+    @circle.fill = 'red'
+    @circle.noStroke()
+    @rotator = @two.makeGroup(@circle)
+    @rotator.translation.set(@two.width/2, @two.height/2)
+
+    # @two.bind 'update', @update
+    @two.play()
+
+  # update: (frameCount) =>
+
 
   setupTracking: (_setup) ->
     @setupMotionListener(_setup)
@@ -60,7 +87,9 @@ class Orienter
   onDeviceMotion: (event) =>
     @server.emit('motionData', {alpha: event.alpha, beta: event.beta, gamma: event.gamma,});
     @orientation_el.text('Orientation: '+[event.alpha, event.beta, event.gamma].join(', '))
-    @current_el.text('Current: ' + Math.floor(event.alpha))
+    @currentVal = Math.floor(event.alpha || 0)
+    @current_el.text('Current: ' + @currentVal)
+    @updateDistance()
 
   onDeviceAccel: (event) =>
     @server.emit 'accelerationData',
@@ -69,3 +98,12 @@ class Orienter
       accelerationIncludingGravity: event.accelerationIncludingGravity
     @acceleration_el.text('Acceleration: '+[event.accelerationIncludingGravity.x, event.accelerationIncludingGravity.y, event.accelerationIncludingGravity.z].join(', '))
 
+  updateDistance: ->
+    return if @currentVal == undefined || @targetVal == undefined
+    @rotator.rotation = (@currentVal - @targetVal) / 180 * Math.PI
+    a = @targetVal
+    a = 180 - (@targetVal - 180) if @targetVal > 180
+    b = @currentVal
+    b = 180 - (@currentVal - 180) if @currentVal > 180
+    dist = a-b
+    @distance_el.text('Delta: ' + Math.abs(dist))

@@ -20,6 +20,9 @@
       this.acceleration_el = $('#acceleration');
       this.target_el = $('#target');
       this.current_el = $('#current');
+      this.distance_el = $('#distance');
+      this.currentVal = 0;
+      this.targetVal = 0;
       this.server.on('sessionId', function(data) {
         _this.session_id = data;
         return _this.session_el.text('Session ID: ' + data);
@@ -45,8 +48,25 @@
         if (data.sessionId !== _this.session_id) {
           return;
         }
-        return _this.target_el.text('Target: ' + data.value);
+        _this.targetVal = data.value;
+        _this.target_el.text('Target: ' + _this.targetVal);
+        return _this.updateDistance();
       });
+      this.twoEl = document.getElementById('anim');
+      this.two = new Two({
+        fullscreen: true
+      }).appendTo(this.twoEl);
+      this.c1 = this.two.makeCircle(0, 0, Math.min(this.two.width * 0.3, this.two.height * 0.3));
+      this.c1.translation.set(this.two.width / 2, this.two.height / 2);
+      this.c1.fill = 'black';
+      this.c1.noStroke();
+      this.c1.opacity = 0.5;
+      this.circle = this.two.makeCircle(0, -Math.min(this.two.width * 0.3, this.two.height * 0.3), 10);
+      this.circle.fill = 'red';
+      this.circle.noStroke();
+      this.rotator = this.two.makeGroup(this.circle);
+      this.rotator.translation.set(this.two.width / 2, this.two.height / 2);
+      this.two.play();
     }
 
     Orienter.prototype.setupTracking = function(_setup) {
@@ -82,7 +102,9 @@
         gamma: event.gamma
       });
       this.orientation_el.text('Orientation: ' + [event.alpha, event.beta, event.gamma].join(', '));
-      return this.current_el.text('Current: ' + Math.floor(event.alpha));
+      this.currentVal = Math.floor(event.alpha || 0);
+      this.current_el.text('Current: ' + this.currentVal);
+      return this.updateDistance();
     };
 
     Orienter.prototype.onDeviceAccel = function(event) {
@@ -92,6 +114,24 @@
         accelerationIncludingGravity: event.accelerationIncludingGravity
       });
       return this.acceleration_el.text('Acceleration: ' + [event.accelerationIncludingGravity.x, event.accelerationIncludingGravity.y, event.accelerationIncludingGravity.z].join(', '));
+    };
+
+    Orienter.prototype.updateDistance = function() {
+      var a, b, dist;
+      if (this.currentVal === void 0 || this.targetVal === void 0) {
+        return;
+      }
+      this.rotator.rotation = (this.currentVal - this.targetVal) / 180 * Math.PI;
+      a = this.targetVal;
+      if (this.targetVal > 180) {
+        a = 180 - (this.targetVal - 180);
+      }
+      b = this.currentVal;
+      if (this.currentVal > 180) {
+        b = 180 - (this.currentVal - 180);
+      }
+      dist = a - b;
+      return this.distance_el.text('Delta: ' + Math.abs(dist));
     };
 
     return Orienter;
