@@ -20,24 +20,6 @@
       this.clients = new Backbone.Collection();
       this.initScene();
       this.animate();
-      this.processMotionData({
-        cid: 100,
-        alpha: Math.random() * 360,
-        beta: Math.random() * 360,
-        gamma: Math.random() * 360
-      });
-      this.processMotionData({
-        cid: 101,
-        alpha: Math.random() * 360,
-        beta: Math.random() * 360,
-        gamma: Math.random() * 360
-      });
-      this.processMotionData({
-        cid: 102,
-        alpha: Math.random() * 360,
-        beta: Math.random() * 360,
-        gamma: Math.random() * 360
-      });
       this.clients.on('change:highlighted', function(model, value, obj) {
         if (model.clientOrient) {
           if (value === true) {
@@ -61,8 +43,9 @@
       $(window).resize(this._resize);
       document.body.appendChild(this.renderer.domElement);
       this.scene = new THREE.Scene();
-      this.camera.position.set(0, 0, 300);
+      this.camera.position.set(0, 300, 0);
       this.camera.lookAt(this.scene.position);
+      this.camera.rotation.z = Math.PI;
       this.light = new THREE.PointLight(0xFFFFFF);
       this.light.position.copy(this.camera.position);
       this.light.position.x += 3;
@@ -80,11 +63,11 @@
         color: 0x00FF00
       });
       this.globalTargetMesh = new THREE.Mesh(geometry, material);
-      this.globalTargetMesh.position.set(0, 80, 0);
+      this.globalTargetMesh.position.set(0, 0, 80);
       this.globalTargetRotator.add(this.globalTargetMesh);
       this.scene.add(this.globalTargetRotator);
       return this.cms.targetControlView.model.on('change:orientationValue', function(model, value, obj) {
-        return _this.globalTargetRotator.rotation.z = value / 180 * Math.PI;
+        return _this.globalTargetRotator.rotation.y = value / 180 * Math.PI;
       });
     };
 
@@ -146,7 +129,7 @@
   ClientOrient = (function() {
     function ClientOrient(opts) {
       this.options = opts || {};
-      this.geometry = new THREE.CubeGeometry(10, 20, 2);
+      this.geometry = new THREE.CubeGeometry(10, 2, 20);
       this.material = new THREE.MeshLambertMaterial({
         color: 0xFF0000
       });

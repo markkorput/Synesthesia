@@ -19,6 +19,7 @@
       this.orientation_el = $('#orientation');
       this.acceleration_el = $('#acceleration');
       this.target_el = $('#target');
+      this.current_el = $('#current');
       this.server.on('sessionId', function(data) {
         _this.session_id = data;
         return _this.session_el.text('Session ID: ' + data);
@@ -80,7 +81,8 @@
         beta: event.beta,
         gamma: event.gamma
       });
-      return this.orientation_el.text('Orientation: ' + [event.alpha, event.beta, event.gamma].join(', '));
+      this.orientation_el.text('Orientation: ' + [event.alpha, event.beta, event.gamma].join(', '));
+      return this.current_el.text('Current: ' + Math.floor(event.alpha));
     };
 
     Orienter.prototype.onDeviceAccel = function(event) {

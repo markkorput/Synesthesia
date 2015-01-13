@@ -17,9 +17,9 @@ class Orients
         @initScene()
         @animate()
 
-        @processMotionData(cid: 100, alpha: Math.random()*360, beta: Math.random()*360, gamma: Math.random()*360)
-        @processMotionData(cid: 101, alpha: Math.random()*360, beta: Math.random()*360, gamma: Math.random()*360)
-        @processMotionData(cid: 102, alpha: Math.random()*360, beta: Math.random()*360, gamma: Math.random()*360)
+        # @processMotionData(cid: 100, alpha: Math.random()*360, beta: Math.random()*360, gamma: Math.random()*360)
+        # @processMotionData(cid: 101, alpha: Math.random()*360, beta: Math.random()*360, gamma: Math.random()*360)
+        # @processMotionData(cid: 102, alpha: Math.random()*360, beta: Math.random()*360, gamma: Math.random()*360)
 
         @clients.on 'change:highlighted', (model, value, obj) =>
             if model.clientOrient
@@ -45,8 +45,9 @@ class Orients
 
         @scene = new THREE.Scene()
 
-        @camera.position.set(0, 0, 300)
+        @camera.position.set(0, 300, 0)
         @camera.lookAt @scene.position
+        @camera.rotation.z = Math.PI
 
         @light = new THREE.PointLight(0xFFFFFF)
         @light.position.copy @camera.position
@@ -61,16 +62,15 @@ class Orients
         geometry = new THREE.SphereGeometry 10
         material = new THREE.MeshLambertMaterial(color: 0x00FF00)
         @globalTargetMesh = new THREE.Mesh(geometry, material)
-        @globalTargetMesh.position.set(0, 80, 0)
+        @globalTargetMesh.position.set(0, 0, 80)
         @globalTargetRotator.add @globalTargetMesh
         @scene.add @globalTargetRotator
 
         @cms.targetControlView.model.on 'change:orientationValue', (model, value, obj) =>
-            @globalTargetRotator.rotation.z = value / 180 * Math.PI
+            @globalTargetRotator.rotation.y = value / 180 * Math.PI
 
     updateGlobalTarget: ->
         return if !@cms || !@cms.targetControlView || !@cms.targetControlView.model
-
 
     _resize: (event) ->
         if @camera
@@ -110,7 +110,7 @@ class ClientOrient
     constructor: (opts) ->
         @options = opts || {}
 
-        @geometry = new THREE.CubeGeometry 10, 20, 2
+        @geometry = new THREE.CubeGeometry 10, 2, 20
         @material = new THREE.MeshLambertMaterial(color: 0xFF0000)
 
         @mesh = new THREE.Mesh( @geometry, @material )
