@@ -44,26 +44,45 @@
         if (data.targetOrientationValue) {
           _this.targetVal = data.targetOrientationValue;
           _this.log('target-direction', _this.targetVal);
-          return _this.updateDistance();
+          _this.updateDistance();
+        }
+        if (data.visualize !== void 0) {
+          console.log(data.visualize);
+          if (data.visualize === true) {
+            return _this.loadVisualizer();
+          } else {
+            return _this.loadVisualizer(false);
+          }
         }
       });
       this.twoEl = document.getElementById('anim');
       this.two = new Two({
         fullscreen: true
       }).appendTo(this.twoEl);
-      this.c1 = this.two.makeCircle(0, 0, Math.min(this.two.width * 0.3, this.two.height * 0.3));
-      this.c1.translation.set(this.two.width / 2, this.two.height / 2);
-      this.c1.noFill();
-      this.c1.stroke = 'white';
-      this.c1.opacity = 0.5;
-      this.c1.linewidth = 2;
-      this.circle = this.two.makeCircle(0, -Math.min(this.two.width * 0.3, this.two.height * 0.3), 10);
-      this.circle.fill = 'red';
-      this.circle.noStroke();
-      this.rotator = this.two.makeGroup(this.circle);
-      this.rotator.translation.set(this.two.width / 2, this.two.height / 2);
+      this.loadVisualizer();
       this.two.play();
     }
+
+    Orienter.prototype.loadVisualizer = function(_load) {
+      if (_load === false) {
+        this.two.remove(this.rotator, this.c1);
+        this.rotator = void 0;
+        this.c1 = void 0;
+        return this.c2 = void 0;
+      } else {
+        this.c1 || (this.c1 = this.two.makeCircle(0, 0, Math.min(this.two.width * 0.3, this.two.height * 0.3)));
+        this.c1.translation.set(this.two.width / 2, this.two.height / 2);
+        this.c1.noFill();
+        this.c1.stroke = 'white';
+        this.c1.opacity = 0.5;
+        this.c1.linewidth = 2;
+        this.c2 || (this.c2 = this.two.makeCircle(0, -Math.min(this.two.width * 0.3, this.two.height * 0.3), 10));
+        this.c2.fill = 'red';
+        this.c2.noStroke();
+        this.rotator || (this.rotator = this.two.makeGroup(this.c2));
+        return this.rotator.translation.set(this.two.width / 2, this.two.height / 2);
+      }
+    };
 
     Orienter.prototype.setupTracking = function(_setup) {
       this.setupMotionListener(_setup);

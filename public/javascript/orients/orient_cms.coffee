@@ -42,13 +42,17 @@ class @OrientCms
         @view.collection.on 'add', (model) =>
             model.set(targetOrientationValue: globalModel.get('orientationValue'))
 
+        @view.collection.on 'change:customVisualizeValue', (model, val, obj) =>
+            if val != true
+                model.set(visualize: globalModel.get('visualize'))
+
         # when a client's (actual) target value changes, emit a message to notify the client
         @view.collection.on 'change:targetOrientationValue', (model, value, obj) =>
             @server.emit('orient-config', sessionId: model.id, targetOrientationValue: value)
 
-        @view.collection.on 'change:customVisualizeValue', (model, val, obj) =>
-            if val != true
-                model.set(visualize: globalModel.get('visualize'))
+        @view.collection.on 'change:visualize', (model, value, obj) =>
+            @server.emit('orient-config', sessionId: model.id, visualize: value)
+
 
     _pushVisualize: (model, val, obj) =>
         @view.collection.each (clientModel) =>

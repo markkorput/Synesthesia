@@ -58,18 +58,24 @@
           targetOrientationValue: globalModel.get('orientationValue')
         });
       });
-      this.view.collection.on('change:targetOrientationValue', function(model, value, obj) {
-        return _this.server.emit('orient-config', {
-          sessionId: model.id,
-          targetOrientationValue: value
-        });
-      });
       this.view.collection.on('change:customVisualizeValue', function(model, val, obj) {
         if (val !== true) {
           return model.set({
             visualize: globalModel.get('visualize')
           });
         }
+      });
+      this.view.collection.on('change:targetOrientationValue', function(model, value, obj) {
+        return _this.server.emit('orient-config', {
+          sessionId: model.id,
+          targetOrientationValue: value
+        });
+      });
+      this.view.collection.on('change:visualize', function(model, value, obj) {
+        return _this.server.emit('orient-config', {
+          sessionId: model.id,
+          visualize: value
+        });
       });
     }
 

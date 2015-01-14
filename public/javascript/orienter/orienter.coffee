@@ -37,23 +37,42 @@ class Orienter
         @log 'target-direction', @targetVal
         @updateDistance()
 
+      if data.visualize != undefined
+        console.log data.visualize
+        if data.visualize == true
+          @loadVisualizer()
+        else
+          @loadVisualizer(false)
+  
+
     @twoEl = document.getElementById('anim');
     @two = new Two(fullscreen: true).appendTo(@twoEl)
 
-    @c1 = @two.makeCircle(0, 0, Math.min(@two.width*0.3, @two.height*0.3))
-    @c1.translation.set(@two.width/2, @two.height/2)
-    @c1.noFill()
-    @c1.stroke = 'white'
-    @c1.opacity = 0.5
-    @c1.linewidth = 2
-    @circle = @two.makeCircle(0, -Math.min(@two.width*0.3, @two.height*0.3), 10)
-    @circle.fill = 'red'
-    @circle.noStroke()
-    @rotator = @two.makeGroup(@circle)
-    @rotator.translation.set(@two.width/2, @two.height/2)
+    @loadVisualizer()
+
+
 
     # @two.bind 'update', @update
     @two.play()
+
+  loadVisualizer: (_load) ->
+    if _load == false
+      @two.remove(@rotator, @c1) # @c2 is nested inside rotator and will thus be removed
+      @rotator = undefined
+      @c1 = undefined
+      @c2 = undefined
+    else
+      @c1 ||= @two.makeCircle(0, 0, Math.min(@two.width*0.3, @two.height*0.3))
+      @c1.translation.set(@two.width/2, @two.height/2)
+      @c1.noFill()
+      @c1.stroke = 'white'
+      @c1.opacity = 0.5
+      @c1.linewidth = 2
+      @c2 ||= @two.makeCircle(0, -Math.min(@two.width*0.3, @two.height*0.3), 10)
+      @c2.fill = 'red'
+      @c2.noStroke()
+      @rotator ||= @two.makeGroup(@c2)
+      @rotator.translation.set(@two.width/2, @two.height/2)
 
   # update: (frameCount) =>
 
