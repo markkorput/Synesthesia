@@ -6,26 +6,19 @@ class Orienter
     @options = opts || {}
 
     @server = io.connect '/orienter'
-    @$h1 = $('h1')
-    @session_el = $('#session_id')
-    @orientation_el = $('#orientation')
-    @acceleration_el = $('#acceleration')
-    @target_el = $('#target')
-    @current_el = $('#current')
-    @distance_el = $('#distance')
 
     @currentVal = 0
     @targetVal = 0
 
     @server.on 'sessionId', (data) =>
-      @session_id = data
-      @session_el.text('Session ID: ' + data)
+      @sessionId = data
+      @log 'SessionID', data
 
     @server.on 'welcome', (data) =>
       if data.tracking
         @setupTracking()
       else
-        @$h1.text 'Connected. Motion tracking off.'
+        @log 'status', 'Connected. Motion tracking off.'
 
     @server.on 'reset', =>
       @setupTracking(false)
@@ -37,20 +30,20 @@ class Orienter
         @setupTracking(false)
 
     @server.on 'targetOrientationValue', (data) =>
-      return if data.sessionId != @session_id # not for us
+      return if data.sessionId != @sessionId # not for us
       @targetVal = data.value
-      @target_el.text 'Target: ' + @targetVal
+      @log 'target-direction', @targetVal
       @updateDistance()
-
 
     @twoEl = document.getElementById('anim');
     @two = new Two(fullscreen: true).appendTo(@twoEl)
 
     @c1 = @two.makeCircle(0, 0, Math.min(@two.width*0.3, @two.height*0.3))
     @c1.translation.set(@two.width/2, @two.height/2)
-    @c1.fill = 'black'
-    @c1.noStroke()
+    @c1.noFill()
+    @c1.stroke = 'white'
     @c1.opacity = 0.5
+    @c1.linewidth = 2
     @circle = @two.makeCircle(0, -Math.min(@two.width*0.3, @two.height*0.3), 10)
     @circle.fill = 'red'
     @circle.noStroke()
@@ -68,9 +61,9 @@ class Orienter
     @setupAccelListener(_setup)
 
     if _setup == true || _setup == undefined
-      @$h1.text 'Now tracking motion.'
+      @log 'status', 'Now tracking motion.'
     else
-      @$h1.text 'Motion tracking off.'
+      @log 'status', 'Motion tracking off.'
 
   setupMotionListener: (_setup) ->
     if _setup == true || _setup == undefined
@@ -86,9 +79,10 @@ class Orienter
 
   onDeviceMotion: (event) =>
     @server.emit('motionData', {alpha: event.alpha, beta: event.beta, gamma: event.gamma,});
-    @orientation_el.text('Orientation: '+[event.alpha, event.beta, event.gamma].join(', '))
+    @log 'orientation', _.map([event.alpha, event.beta, event.gamma], (val) -> Math.floor(val / Math.PI * 180)).join(', ')
+
     @currentVal = Math.floor(event.alpha || 0)
-    @current_el.text('Current: ' + @currentVal)
+    @log 'current-value', @currentVal
     @updateDistance()
 
   onDeviceAccel: (event) =>
@@ -96,7 +90,7 @@ class Orienter
       rotationRate: event.rotationRate
       acceleration: event.acceleration
       accelerationIncludingGravity: event.accelerationIncludingGravity
-    @acceleration_el.text('Acceleration: '+[event.accelerationIncludingGravity.x, event.accelerationIncludingGravity.y, event.accelerationIncludingGravity.z].join(', '))
+    @log 'acceleration', _.map([event.accelerationIncludingGravity.x, event.accelerationIncludingGravity.y, event.accelerationIncludingGravity.z], (val) -> Math.floor(val / Math.PI * 180)).join(', ')
 
   updateDistance: ->
     return if @currentVal == undefined || @targetVal == undefined
@@ -106,4 +100,40 @@ class Orienter
     b = @currentVal
     b = 180 - (@currentVal - 180) if @currentVal > 180
     dist = a-b
-    @distance_el.text('Delta: ' + Math.abs(dist))
+    @log 'direction-delta', Math.abs(dist)
+
+
+  #
+  # LOGGING
+  #
+
+  _logsContainer: ->
+    @$_logsContainerEl ||= $('#logs')
+    if @$_logsContainerEl.length == 0
+      $('body').append('<div id="logs"></div>')
+      @$_logsContainerEl = $('#logs')
+
+    return @$_logsContainerEl
+
+  _logValueElFor: (subject) ->
+    logsContainer = @_logsContainer()
+    logField = logsContainer.find('#'+subject) # creates if necessary
+    if logField.length == 0
+      logsContainer.append('<p id="'+subject+'"><span class="label">'+subject+'</span><span class="value"></span></p>');
+      logField = logsContainer.find('#'+subject)
+
+    # lbl = logField.find('.label')
+    return logField.find('.value')
+
+  log: (subject, message) -> 
+    if message == undefined
+      message = subject
+      subject = undefined
+
+    if subject == undefined
+      console.log message
+      return
+
+    el = @_logValueElFor(subject)
+    el.text(message)
+

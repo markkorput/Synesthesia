@@ -14,24 +14,17 @@
       var _this = this;
       this.options = opts || {};
       this.server = io.connect('/orienter');
-      this.$h1 = $('h1');
-      this.session_el = $('#session_id');
-      this.orientation_el = $('#orientation');
-      this.acceleration_el = $('#acceleration');
-      this.target_el = $('#target');
-      this.current_el = $('#current');
-      this.distance_el = $('#distance');
       this.currentVal = 0;
       this.targetVal = 0;
       this.server.on('sessionId', function(data) {
-        _this.session_id = data;
-        return _this.session_el.text('Session ID: ' + data);
+        _this.sessionId = data;
+        return _this.log('SessionID', data);
       });
       this.server.on('welcome', function(data) {
         if (data.tracking) {
           return _this.setupTracking();
         } else {
-          return _this.$h1.text('Connected. Motion tracking off.');
+          return _this.log('status', 'Connected. Motion tracking off.');
         }
       });
       this.server.on('reset', function() {
@@ -45,11 +38,11 @@
         }
       });
       this.server.on('targetOrientationValue', function(data) {
-        if (data.sessionId !== _this.session_id) {
+        if (data.sessionId !== _this.sessionId) {
           return;
         }
         _this.targetVal = data.value;
-        _this.target_el.text('Target: ' + _this.targetVal);
+        _this.log('target-direction', _this.targetVal);
         return _this.updateDistance();
       });
       this.twoEl = document.getElementById('anim');
@@ -58,9 +51,10 @@
       }).appendTo(this.twoEl);
       this.c1 = this.two.makeCircle(0, 0, Math.min(this.two.width * 0.3, this.two.height * 0.3));
       this.c1.translation.set(this.two.width / 2, this.two.height / 2);
-      this.c1.fill = 'black';
-      this.c1.noStroke();
+      this.c1.noFill();
+      this.c1.stroke = 'white';
       this.c1.opacity = 0.5;
+      this.c1.linewidth = 2;
       this.circle = this.two.makeCircle(0, -Math.min(this.two.width * 0.3, this.two.height * 0.3), 10);
       this.circle.fill = 'red';
       this.circle.noStroke();
@@ -73,9 +67,9 @@
       this.setupMotionListener(_setup);
       this.setupAccelListener(_setup);
       if (_setup === true || _setup === void 0) {
-        return this.$h1.text('Now tracking motion.');
+        return this.log('status', 'Now tracking motion.');
       } else {
-        return this.$h1.text('Motion tracking off.');
+        return this.log('status', 'Motion tracking off.');
       }
     };
 
@@ -101,9 +95,11 @@
         beta: event.beta,
         gamma: event.gamma
       });
-      this.orientation_el.text('Orientation: ' + [event.alpha, event.beta, event.gamma].join(', '));
+      this.log('orientation', _.map([event.alpha, event.beta, event.gamma], function(val) {
+        return Math.floor(val / Math.PI * 180);
+      }).join(', '));
       this.currentVal = Math.floor(event.alpha || 0);
-      this.current_el.text('Current: ' + this.currentVal);
+      this.log('current-value', this.currentVal);
       return this.updateDistance();
     };
 
@@ -113,7 +109,9 @@
         acceleration: event.acceleration,
         accelerationIncludingGravity: event.accelerationIncludingGravity
       });
-      return this.acceleration_el.text('Acceleration: ' + [event.accelerationIncludingGravity.x, event.accelerationIncludingGravity.y, event.accelerationIncludingGravity.z].join(', '));
+      return this.log('acceleration', _.map([event.accelerationIncludingGravity.x, event.accelerationIncludingGravity.y, event.accelerationIncludingGravity.z], function(val) {
+        return Math.floor(val / Math.PI * 180);
+      }).join(', '));
     };
 
     Orienter.prototype.updateDistance = function() {
@@ -131,7 +129,41 @@
         b = 180 - (this.currentVal - 180);
       }
       dist = a - b;
-      return this.distance_el.text('Delta: ' + Math.abs(dist));
+      return this.log('direction-delta', Math.abs(dist));
+    };
+
+    Orienter.prototype._logsContainer = function() {
+      this.$_logsContainerEl || (this.$_logsContainerEl = $('#logs'));
+      if (this.$_logsContainerEl.length === 0) {
+        $('body').append('<div id="logs"></div>');
+        this.$_logsContainerEl = $('#logs');
+      }
+      return this.$_logsContainerEl;
+    };
+
+    Orienter.prototype._logValueElFor = function(subject) {
+      var logField, logsContainer;
+      logsContainer = this._logsContainer();
+      logField = logsContainer.find('#' + subject);
+      if (logField.length === 0) {
+        logsContainer.append('<p id="' + subject + '"><span class="label">' + subject + '</span><span class="value"></span></p>');
+        logField = logsContainer.find('#' + subject);
+      }
+      return logField.find('.value');
+    };
+
+    Orienter.prototype.log = function(subject, message) {
+      var el;
+      if (message === void 0) {
+        message = subject;
+        subject = void 0;
+      }
+      if (subject === void 0) {
+        console.log(message);
+        return;
+      }
+      el = this._logValueElFor(subject);
+      return el.text(message);
     };
 
     return Orienter;
