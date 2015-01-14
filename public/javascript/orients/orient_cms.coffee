@@ -21,13 +21,22 @@ class @OrientCms
         # when global target control model's value changes, propagate this change to all client models
         targetControlModel.on 'change:orientationValue', (model, val, obj) =>
             @view.collection.each (clientModel) =>
-                clientModel.set(targetOrientationValue: val)
+                clientModel.set(globalTargetOrientationValue: val)
 
+        # each client gets the 'globalTargetOrientationValue', but only for the ones that don't have a custom target value,
+        # this global value will be applied as actual target value
+        @view.collection.on 'change:globalTargetOrientationValue', (model, val, obj) ->
+            return if model.get('customTargetOrientationValue') == true # skip clients who have a custom setting
+            model.set(targetOrientationValue: val)
+
+        # when a client's (actual) target value changes, emit a message to notify the client
         @view.collection.on 'change:targetOrientationValue', (model, value, obj) =>
             @server.emit('targetOrientationValue', sessionId: model.id, value: value)
 
+        # create visual elements for every new connecting client
         @view.collection.on 'add', (model) =>
             model.set(targetOrientationValue: targetControlModel.get('orientationValue'))
+
 
 class OrientGlobalTargetControlView extends Backbone.View
     tgName: 'div'
@@ -82,11 +91,16 @@ class OrientCmsItemView extends Backbone.View
 
     events:
         'mouseover': '_onHover'
+        'mousedown #target input': '_onCustomTarget'
+        'mousemove #target input': '_onCustomTargetUpdate'
+        'click #target #reset': '_onResetCustomTarget'
+
 
     initialize: ->
         @$el.append('<p id="orientation"></p>')
         @$el.append('<p id="position"></p>')
-        @$el.append('<p id="targetOrientationValue"></p>')
+        @$el.append('<p id="target"><span id="display">0</span><input type="range" value="0" min="0" max="360" /><a href="#" id="reset">reset</a></p>')
+
 
         @updateValues()
 
@@ -97,12 +111,33 @@ class OrientCmsItemView extends Backbone.View
         return if !@model
         @$el.find('p#orientation').text 'Orientation: ' + _.map( @model.get('orientation').toArray(), (str) -> str.toString().substring(0, 5) ).join(', ')
         @$el.find('p#position').text 'Position: ' + _.map( @model.get('position').toArray(), (str) -> str.toString().substring(0, 5) ).join(', ')
-        @$el.find('p#targetOrientationValue').text('targetOrientationValue: ' + @model.get('targetOrientationValue')/180*Math.PI)
+        targetVal = @model.get('targetOrientationValue')
+        @$el.find('p#target #display').text 'targetOrientationValue: ' + targetVal
+        @$el.find('p#target input').val targetVal
+
+        resetEl = @$el.find('p#target #reset')
+        if @model.get('customTargetOrientationValue')
+            resetEl.show()
+        else
+            resetEl.hide()
 
         if @model.get('highlighted') == true
             @$el.addClass 'highlighted'
         else
             @$el.removeClass 'highlighted'
 
+
+
     _onHover: (evt) ->
         @model.set(highlighted: true)
+
+    _onCustomTarget: (evt) ->
+        @model.set(customTargetOrientationValue: true)
+
+    _onCustomTargetUpdate: (evt) ->
+        return if @model.get('customTargetOrientationValue') != true
+        @model.set(targetOrientationValue: $(event.target).val())
+
+    _onResetCustomTarget: (evt) ->
+        @model.set(customTargetOrientationValue: false)
+        @model.set(targetOrientationValue: @model.get('globalTargetOrientationValue'))

@@ -35,8 +35,16 @@
       targetControlModel.on('change:orientationValue', function(model, val, obj) {
         return _this.view.collection.each(function(clientModel) {
           return clientModel.set({
-            targetOrientationValue: val
+            globalTargetOrientationValue: val
           });
+        });
+      });
+      this.view.collection.on('change:globalTargetOrientationValue', function(model, val, obj) {
+        if (model.get('customTargetOrientationValue') === true) {
+          return;
+        }
+        return model.set({
+          targetOrientationValue: val
         });
       });
       this.view.collection.on('change:targetOrientationValue', function(model, value, obj) {
@@ -151,13 +159,16 @@
     OrientCmsItemView.prototype.className = 'orient-cms-item-view';
 
     OrientCmsItemView.prototype.events = {
-      'mouseover': '_onHover'
+      'mouseover': '_onHover',
+      'mousedown #target input': '_onCustomTarget',
+      'mousemove #target input': '_onCustomTargetUpdate',
+      'click #target #reset': '_onResetCustomTarget'
     };
 
     OrientCmsItemView.prototype.initialize = function() {
       this.$el.append('<p id="orientation"></p>');
       this.$el.append('<p id="position"></p>');
-      this.$el.append('<p id="targetOrientationValue"></p>');
+      this.$el.append('<p id="target"><span id="display">0</span><input type="range" value="0" min="0" max="360" /><a href="#" id="reset">reset</a></p>');
       this.updateValues();
       if (this.model) {
         return this.model.on('change', this.updateValues, this);
@@ -165,6 +176,7 @@
     };
 
     OrientCmsItemView.prototype.updateValues = function() {
+      var resetEl, targetVal;
       if (!this.model) {
         return;
       }
@@ -174,7 +186,15 @@
       this.$el.find('p#position').text('Position: ' + _.map(this.model.get('position').toArray(), function(str) {
         return str.toString().substring(0, 5);
       }).join(', '));
-      this.$el.find('p#targetOrientationValue').text('targetOrientationValue: ' + this.model.get('targetOrientationValue') / 180 * Math.PI);
+      targetVal = this.model.get('targetOrientationValue');
+      this.$el.find('p#target #display').text('targetOrientationValue: ' + targetVal);
+      this.$el.find('p#target input').val(targetVal);
+      resetEl = this.$el.find('p#target #reset');
+      if (this.model.get('customTargetOrientationValue')) {
+        resetEl.show();
+      } else {
+        resetEl.hide();
+      }
       if (this.model.get('highlighted') === true) {
         return this.$el.addClass('highlighted');
       } else {
@@ -185,6 +205,30 @@
     OrientCmsItemView.prototype._onHover = function(evt) {
       return this.model.set({
         highlighted: true
+      });
+    };
+
+    OrientCmsItemView.prototype._onCustomTarget = function(evt) {
+      return this.model.set({
+        customTargetOrientationValue: true
+      });
+    };
+
+    OrientCmsItemView.prototype._onCustomTargetUpdate = function(evt) {
+      if (this.model.get('customTargetOrientationValue') !== true) {
+        return;
+      }
+      return this.model.set({
+        targetOrientationValue: $(event.target).val()
+      });
+    };
+
+    OrientCmsItemView.prototype._onResetCustomTarget = function(evt) {
+      this.model.set({
+        customTargetOrientationValue: false
+      });
+      return this.model.set({
+        targetOrientationValue: this.model.get('globalTargetOrientationValue')
       });
     };
 
