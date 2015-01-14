@@ -4,12 +4,12 @@ class @OrientCms
 
         @server = opts.server
 
-        targetControlModel = new Backbone.Model(orientationValue: 0)
+        globalModel = new Backbone.Model(orientationValue: 0, visualize: true, global: true)
         
         @view = new OrientCmsView(collection: opts.clients)
         document.body.appendChild( @view.el );
 
-        @globalItemView = new OrientCmsItemView(model: targetControlModel)
+        @globalItemView = new OrientCmsItemView(model: globalModel)
         # document.body.appendChild( @globalItemView.el );
 
         @view.$el.prepend(@globalItemView.el)
@@ -24,9 +24,13 @@ class @OrientCms
                     m.set(highlighted: false) if m.cid != model.cid
 
         # when global target control model's value changes, propagate this change to all client models
-        targetControlModel.on 'change:targetOrientationValue', (model, val, obj) =>
+        globalModel.on 'change:targetOrientationValue', (model, val, obj) =>
             @view.collection.each (clientModel) =>
                 clientModel.set(globalTargetOrientationValue: val)
+
+        # when global target control model's value changes, propagate this change to all client models
+        globalModel.on 'change:visualize', @_pushVisualize
+
 
         # each client gets the 'globalTargetOrientationValue', but only for the ones that don't have a custom target value,
         # this global value will be applied as actual target value
@@ -36,13 +40,20 @@ class @OrientCms
 
         # create visual elements for every new connecting client
         @view.collection.on 'add', (model) =>
-            model.set(targetOrientationValue: targetControlModel.get('orientationValue'))
+            model.set(targetOrientationValue: globalModel.get('orientationValue'))
 
         # when a client's (actual) target value changes, emit a message to notify the client
         @view.collection.on 'change:targetOrientationValue', (model, value, obj) =>
-            console.log 'emit'
             @server.emit('orient-config', sessionId: model.id, targetOrientationValue: value)
 
+        @view.collection.on 'change:customVisualizeValue', (model, val, obj) =>
+            if val != true
+                model.set(visualize: globalModel.get('visualize'))
+
+    _pushVisualize: (model, val, obj) =>
+        @view.collection.each (clientModel) =>
+            if clientModel.get('customVisualizeValue') != true
+                clientModel.set(visualize: val)
 
 class OrientCmsView extends Backbone.View
     tagName: 'div'
@@ -75,13 +86,18 @@ class OrientCmsItemView extends Backbone.View
         'mousedown #target input': '_onCustomTarget'
         'mousemove #target input': '_onCustomTargetUpdate'
         'click #target #reset': '_onResetCustomTarget'
+        'change #visualize select': '_onVisualizeChange'
 
 
     initialize: ->
         @$el.append('<p id="orientation"></p>')
         @$el.append('<p id="position"></p>')
         @$el.append('<p id="target"><span id="display">0</span><input type="range" value="0" min="0" max="360" /><a href="#" id="reset">reset</a></p>')
-        @$el.append('<p id="visualize">Visualization enabled: <select><option value="global">Use Global</option><option value="1">Enabled</option><option value="0">Disabled</option></select></p>')
+        if @model.get('global')
+            global_option = ''
+        else
+            global_option = '<option value="global">Use Global</option>'
+        @$el.append('<p id="visualize">Visualization enabled: <select>'+global_option+'<option value="1">Enabled</option><option value="0">Disabled</option></select></p>')
 
 
         @updateValues()
@@ -101,12 +117,16 @@ class OrientCmsItemView extends Backbone.View
         @$el.find('p#target #display').text 'targetOrientationValue: ' + targetVal
         @$el.find('p#target input').val targetVal
 
-
         resetEl = @$el.find('p#target #reset')
         if @model.get('customTargetOrientationValue')
             resetEl.show()
         else
             resetEl.hide()
+
+        if @model.get('visualize') == true
+            @$el.find('#visualize').addClass('enabled').removeClass('disabled')
+        else
+            @$el.find('#visualize').addClass('disabled').removeClass('enabled')
 
         if @model.get('highlighted') == true
             @$el.addClass 'highlighted'
@@ -128,3 +148,11 @@ class OrientCmsItemView extends Backbone.View
     _onResetCustomTarget: (evt) ->
         @model.set(customTargetOrientationValue: false)
         @model.set(targetOrientationValue: @model.get('globalTargetOrientationValue'))
+
+    _onVisualizeChange: (evt) ->
+        val = $(evt.target).val()
+        if val == 'global'
+            @model.set(customVisualizeValue: false)
+        else
+            @model.set(customVisualizeValue: true, visualize: val == '1')
+

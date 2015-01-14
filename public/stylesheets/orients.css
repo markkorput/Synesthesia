@@ -57,3 +57,9 @@ p.small {
 .orient-cms-item-view.client.highlighted {
   background-color: #f0f0ff;
 }
+.orient-cms-item-view #visualize.disabled {
+  background-color: #f00;
+}
+.orient-cms-item-view #visualize.enabled {
+  background-color: #008000;
+}
