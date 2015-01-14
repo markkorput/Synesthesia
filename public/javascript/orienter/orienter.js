@@ -49,10 +49,13 @@
         if (data.visualize !== void 0) {
           console.log(data.visualize);
           if (data.visualize === true) {
-            return _this.loadVisualizer();
+            _this.loadVisualizer();
           } else {
-            return _this.loadVisualizer(false);
+            _this.loadVisualizer(false);
           }
+        }
+        if (data.blink !== void 0) {
+          return _this.log('blink', data.blink);
         }
       });
       this.twoEl = document.getElementById('anim');

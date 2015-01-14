@@ -7,6 +7,7 @@
 
   this.OrientCms = (function() {
     function OrientCms(opts) {
+      this._pushBlink = __bind(this._pushBlink, this);
       this._pushVisualize = __bind(this._pushVisualize, this);
       var globalModel,
         _this = this;
@@ -15,6 +16,7 @@
       globalModel = new Backbone.Model({
         orientationValue: 0,
         visualize: true,
+        blink: false,
         global: true
       });
       this.view = new OrientCmsView({
@@ -45,6 +47,7 @@
         });
       });
       globalModel.on('change:visualize', this._pushVisualize);
+      globalModel.on('change:blink', this._pushBlink);
       this.view.collection.on('change:globalTargetOrientationValue', function(model, val, obj) {
         if (model.get('customTargetOrientationValue') === true) {
           return;
@@ -65,6 +68,13 @@
           });
         }
       });
+      this.view.collection.on('change:customBlinkValue', function(model, val, obj) {
+        if (val !== true) {
+          return model.set({
+            blink: globalModel.get('blink')
+          });
+        }
+      });
       this.view.collection.on('change:targetOrientationValue', function(model, value, obj) {
         return _this.server.emit('orient-config', {
           sessionId: model.id,
@@ -77,6 +87,12 @@
           visualize: value
         });
       });
+      this.view.collection.on('change:blink', function(model, value, obj) {
+        return _this.server.emit('orient-config', {
+          sessionId: model.id,
+          blink: value
+        });
+      });
     }
 
     OrientCms.prototype._pushVisualize = function(model, val, obj) {
@@ -85,6 +101,17 @@
         if (clientModel.get('customVisualizeValue') !== true) {
           return clientModel.set({
             visualize: val
+          });
+        }
+      });
+    };
+
+    OrientCms.prototype._pushBlink = function(model, val, obj) {
+      var _this = this;
+      return this.view.collection.each(function(clientModel) {
+        if (clientModel.get('customBlinkValue') !== true) {
+          return clientModel.set({
+            blink: val
           });
         }
       });
@@ -149,7 +176,8 @@
       'mousedown #target input': '_onCustomTarget',
       'mousemove #target input': '_onCustomTargetUpdate',
       'click #target #reset': '_onResetCustomTarget',
-      'change #visualize select': '_onVisualizeChange'
+      'change #visualize select': '_onVisualizeChange',
+      'change #blink select': '_onBlinkChange'
     };
 
     OrientCmsItemView.prototype.initialize = function() {
@@ -163,6 +191,7 @@
         global_option = '<option value="global">Use Global</option>';
       }
       this.$el.append('<p id="visualize">Visualization enabled: <select>' + global_option + '<option value="1">Enabled</option><option value="0">Disabled</option></select></p>');
+      this.$el.append('<p id="blink">Blink enabled: <select>' + global_option + '<option value="1">Enabled</option><option value="0">Disabled</option></select></p>');
       this.updateValues();
       if (this.model) {
         return this.model.on('change', this.updateValues, this);
@@ -197,6 +226,11 @@
         this.$el.find('#visualize').addClass('enabled').removeClass('disabled');
       } else {
         this.$el.find('#visualize').addClass('disabled').removeClass('enabled');
+      }
+      if (this.model.get('blink') === true) {
+        this.$el.find('#blink').addClass('enabled').removeClass('disabled');
+      } else {
+        this.$el.find('#blink').addClass('disabled').removeClass('enabled');
       }
       if (this.model.get('highlighted') === true) {
         return this.$el.addClass('highlighted');
@@ -246,6 +280,21 @@
         return this.model.set({
           customVisualizeValue: true,
           visualize: val === '1'
+        });
+      }
+    };
+
+    OrientCmsItemView.prototype._onBlinkChange = function(evt) {
+      var val;
+      val = $(evt.target).val();
+      if (val === 'global') {
+        return this.model.set({
+          customBlinkValue: false
+        });
+      } else {
+        return this.model.set({
+          customBlinkValue: true,
+          blink: val === '1'
         });
       }
     };

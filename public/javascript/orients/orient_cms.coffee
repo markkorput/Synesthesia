@@ -4,7 +4,7 @@ class @OrientCms
 
         @server = opts.server
 
-        globalModel = new Backbone.Model(orientationValue: 0, visualize: true, global: true)
+        globalModel = new Backbone.Model(orientationValue: 0, visualize: true, blink: false, global: true)
         
         @view = new OrientCmsView(collection: opts.clients)
         document.body.appendChild( @view.el );
@@ -30,7 +30,7 @@ class @OrientCms
 
         # when global target control model's value changes, propagate this change to all client models
         globalModel.on 'change:visualize', @_pushVisualize
-
+        globalModel.on 'change:blink', @_pushBlink
 
         # each client gets the 'globalTargetOrientationValue', but only for the ones that don't have a custom target value,
         # this global value will be applied as actual target value
@@ -46,6 +46,10 @@ class @OrientCms
             if val != true
                 model.set(visualize: globalModel.get('visualize'))
 
+        @view.collection.on 'change:customBlinkValue', (model, val, obj) =>
+            if val != true
+                model.set(blink: globalModel.get('blink'))
+
         # when a client's (actual) target value changes, emit a message to notify the client
         @view.collection.on 'change:targetOrientationValue', (model, value, obj) =>
             @server.emit('orient-config', sessionId: model.id, targetOrientationValue: value)
@@ -53,11 +57,18 @@ class @OrientCms
         @view.collection.on 'change:visualize', (model, value, obj) =>
             @server.emit('orient-config', sessionId: model.id, visualize: value)
 
+        @view.collection.on 'change:blink', (model, value, obj) =>
+            @server.emit('orient-config', sessionId: model.id, blink: value)
 
     _pushVisualize: (model, val, obj) =>
         @view.collection.each (clientModel) =>
             if clientModel.get('customVisualizeValue') != true
                 clientModel.set(visualize: val)
+
+    _pushBlink: (model, val, obj) =>
+        @view.collection.each (clientModel) =>
+            if clientModel.get('customBlinkValue') != true
+                clientModel.set(blink: val)
 
 class OrientCmsView extends Backbone.View
     tagName: 'div'
@@ -91,18 +102,22 @@ class OrientCmsItemView extends Backbone.View
         'mousemove #target input': '_onCustomTargetUpdate'
         'click #target #reset': '_onResetCustomTarget'
         'change #visualize select': '_onVisualizeChange'
+        'change #blink select': '_onBlinkChange'
 
 
     initialize: ->
         @$el.append('<p id="orientation"></p>')
         @$el.append('<p id="position"></p>')
         @$el.append('<p id="target"><span id="display">0</span><input type="range" value="0" min="0" max="360" /><a href="#" id="reset">reset</a></p>')
+
         if @model.get('global')
             global_option = ''
         else
             global_option = '<option value="global">Use Global</option>'
+
         @$el.append('<p id="visualize">Visualization enabled: <select>'+global_option+'<option value="1">Enabled</option><option value="0">Disabled</option></select></p>')
 
+        @$el.append('<p id="blink">Blink enabled: <select>'+global_option+'<option value="1">Enabled</option><option value="0">Disabled</option></select></p>')
 
         @updateValues()
 
@@ -132,6 +147,11 @@ class OrientCmsItemView extends Backbone.View
         else
             @$el.find('#visualize').addClass('disabled').removeClass('enabled')
 
+        if @model.get('blink') == true
+            @$el.find('#blink').addClass('enabled').removeClass('disabled')
+        else
+            @$el.find('#blink').addClass('disabled').removeClass('enabled')
+
         if @model.get('highlighted') == true
             @$el.addClass 'highlighted'
         else
@@ -160,3 +180,9 @@ class OrientCmsItemView extends Backbone.View
         else
             @model.set(customVisualizeValue: true, visualize: val == '1')
 
+    _onBlinkChange: (evt) ->
+        val = $(evt.target).val()
+        if val == 'global'
+            @model.set(customBlinkValue: false)
+        else
+            @model.set(customBlinkValue: true, blink: val == '1')

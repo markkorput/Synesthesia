@@ -43,6 +43,9 @@ class Orienter
           @loadVisualizer()
         else
           @loadVisualizer(false)
+
+      if data.blink != undefined
+        @log 'blink', data.blink
   
 
     @twoEl = document.getElementById('anim');
