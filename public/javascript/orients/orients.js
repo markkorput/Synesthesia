@@ -107,7 +107,7 @@
           orientation: vec3
         });
       } else {
-        pos = new THREE.Vector3(-50 + Math.random() * 100, -50 + Math.random() * 100, 0);
+        pos = new THREE.Vector3(-50 + Math.random() * 100, 0, -50 + Math.random() * 100);
         model = new Backbone.Model({
           id: data.cid,
           orientation: vec3,

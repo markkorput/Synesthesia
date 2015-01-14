@@ -117,7 +117,7 @@
         gamma: event.gamma
       });
       this.log('orientation', _.map([event.alpha, event.beta, event.gamma], function(val) {
-        return Math.floor(val / Math.PI * 180);
+        return Math.floor(val);
       }).join(', '));
       this.currentVal = Math.floor(event.alpha || 0);
       this.log('current-value', this.currentVal);
@@ -131,7 +131,7 @@
         accelerationIncludingGravity: event.accelerationIncludingGravity
       });
       return this.log('acceleration', _.map([event.accelerationIncludingGravity.x, event.accelerationIncludingGravity.y, event.accelerationIncludingGravity.z], function(val) {
-        return Math.floor(val / Math.PI * 180);
+        return Math.floor(val);
       }).join(', '));
     };
 
@@ -140,7 +140,9 @@
       if (this.currentVal === void 0 || this.targetVal === void 0) {
         return;
       }
-      this.rotator.rotation = (this.currentVal - this.targetVal) / 180 * Math.PI;
+      if (this.rotator) {
+        this.rotator.rotation = (this.currentVal - this.targetVal) / 180 * Math.PI;
+      }
       a = this.targetVal;
       if (this.targetVal > 180) {
         a = 180 - (this.targetVal - 180);

@@ -100,7 +100,7 @@ class Orienter
 
   onDeviceMotion: (event) =>
     @server.emit('motionData', {alpha: event.alpha, beta: event.beta, gamma: event.gamma,});
-    @log 'orientation', _.map([event.alpha, event.beta, event.gamma], (val) -> Math.floor(val / Math.PI * 180)).join(', ')
+    @log 'orientation', _.map([event.alpha, event.beta, event.gamma], (val) -> Math.floor(val)).join(', ')
 
     @currentVal = Math.floor(event.alpha || 0)
     @log 'current-value', @currentVal
@@ -111,11 +111,11 @@ class Orienter
       rotationRate: event.rotationRate
       acceleration: event.acceleration
       accelerationIncludingGravity: event.accelerationIncludingGravity
-    @log 'acceleration', _.map([event.accelerationIncludingGravity.x, event.accelerationIncludingGravity.y, event.accelerationIncludingGravity.z], (val) -> Math.floor(val / Math.PI * 180)).join(', ')
+    @log 'acceleration', _.map([event.accelerationIncludingGravity.x, event.accelerationIncludingGravity.y, event.accelerationIncludingGravity.z], (val) -> Math.floor(val)).join(', ')
 
   updateDistance: ->
     return if @currentVal == undefined || @targetVal == undefined
-    @rotator.rotation = (@currentVal - @targetVal) / 180 * Math.PI
+    @rotator.rotation = (@currentVal - @targetVal) / 180 * Math.PI if @rotator
     a = @targetVal
     a = 180 - (@targetVal - 180) if @targetVal > 180
     b = @currentVal
