@@ -1,3 +1,19 @@
+class OrientModel extends Backbone.Model
+  initialize: ->
+    @on 'change:targetOrientationValue', @_updateDistance
+    @on 'change:orientationValue', @_updateDistance
+
+  _updateDistance: =>
+    target = @get('targetOrientationValue')
+    current = @get('orientationValue')
+    return if target == undefined || current == undefined
+    target = 180 - (targettargetVa - 180) if target > 180
+    current= 180 - (current - 180) if current > 180
+    dist = target-current
+    # @log 'direction-delta', Math.abs(dist)
+    @set(orientationDistance: dist)
+
+
 $(document).ready ->
   window.orienter = new Orienter()
 
@@ -7,8 +23,7 @@ class Orienter
 
     @server = io.connect '/orienter'
 
-    @currentVal = 0
-    @targetVal = 0
+    @model = new OrientModel(targetOrientationValue: 0, blink: false, visualize: true)
 
     @server.on 'sessionId', (data) =>
       @sessionId = data
@@ -31,22 +46,27 @@ class Orienter
 
     @server.on 'orient-config', (data) =>
       return if data.sessionId != @sessionId # not for us
-
-      if data.targetOrientationValue
-        @targetVal = data.targetOrientationValue
-        @log 'target-direction', @targetVal
-        @updateDistance()
-
-      if data.visualize != undefined
-        console.log data.visualize
-        if data.visualize == true
-          @loadVisualizer()
-        else
-          @loadVisualizer(false)
-
-      if data.blink != undefined
-        @log 'blink', data.blink
+      @model.set(data)
   
+    @model.on 'change:targetOrientationValue', (model, val, obj) =>
+      @log 'target-direction', val
+      @_updateVisualizerRotation()
+
+    @model.on 'change:orientationValue', (model,val,obj) =>
+      @log 'current-direction', val
+      @_updateVisualizerRotation()
+
+    @model.on 'change:visualize', (model,val,obj) =>
+      if val == true
+        @loadVisualizer()
+      else
+        @loadVisualizer(false)
+
+    @model.on 'change:blink', (model,val,obj) =>
+      @log 'blink', val
+
+    @model.on 'change:orientationDistance', (model,val,obj) =>
+      @log 'direction-delta', Math.abs(val)
 
     @twoEl = document.getElementById('anim');
     @two = new Two(fullscreen: true).appendTo(@twoEl)
@@ -77,6 +97,10 @@ class Orienter
       @rotator ||= @two.makeGroup(@c2)
       @rotator.translation.set(@two.width/2, @two.height/2)
 
+  _updateVisualizerRotation: ->
+    return if !@rotator || !@model
+    @rotator.rotation = ((@model.get('orientationValue') || 0) - (@model.get('targetOrientationValue') || 0)) / 180 * Math.PI
+
   # update: (frameCount) =>
 
 
@@ -104,10 +128,7 @@ class Orienter
   onDeviceMotion: (event) =>
     @server.emit('motionData', {alpha: event.alpha, beta: event.beta, gamma: event.gamma,});
     @log 'orientation', _.map([event.alpha, event.beta, event.gamma], (val) -> Math.floor(val)).join(', ')
-
-    @currentVal = Math.floor(event.alpha || 0)
-    @log 'current-value', @currentVal
-    @updateDistance()
+    @model.set(orientationValue: Math.floor(event.alpha || 0))
 
   onDeviceAccel: (event) =>
     @server.emit 'accelerationData',
