@@ -5,11 +5,16 @@ class @OrientCms
         @server = opts.server
 
         targetControlModel = new Backbone.Model(orientationValue: 0)
-        @targetControlView = new OrientGlobalTargetControlView(model: targetControlModel)
-        document.body.appendChild( @targetControlView.el );
-
+        
         @view = new OrientCmsView(collection: opts.clients)
         document.body.appendChild( @view.el );
+
+        @globalItemView = new OrientCmsItemView(model: targetControlModel)
+        # document.body.appendChild( @globalItemView.el );
+
+        @view.$el.prepend(@globalItemView.el)
+        $(@globalItemView.el).addClass('global')
+
 
         # when a client gets highlighted, "UNhighlight" all others
         opts.clients.on 'change:highlighted', (model, value, obj) ->
@@ -19,7 +24,7 @@ class @OrientCms
                     m.set(highlighted: false) if m.cid != model.cid
 
         # when global target control model's value changes, propagate this change to all client models
-        targetControlModel.on 'change:orientationValue', (model, val, obj) =>
+        targetControlModel.on 'change:targetOrientationValue', (model, val, obj) =>
             @view.collection.each (clientModel) =>
                 clientModel.set(globalTargetOrientationValue: val)
 
@@ -29,40 +34,14 @@ class @OrientCms
             return if model.get('customTargetOrientationValue') == true # skip clients who have a custom setting
             model.set(targetOrientationValue: val)
 
-        # when a client's (actual) target value changes, emit a message to notify the client
-        @view.collection.on 'change:targetOrientationValue', (model, value, obj) =>
-            @server.emit('targetOrientationValue', sessionId: model.id, value: value)
-
         # create visual elements for every new connecting client
         @view.collection.on 'add', (model) =>
             model.set(targetOrientationValue: targetControlModel.get('orientationValue'))
 
-
-class OrientGlobalTargetControlView extends Backbone.View
-    tgName: 'div'
-    className: 'orient-global-target-control-view'
-
-    events:
-        # 'change #slider': 'sliderChanged'
-        'mousemove #slider': 'sliderChanged'
-
-    initialize: ->
-        # create DOM elements
-        @$el.append('<span id="display">0</span><input type="range" id="slider" value="0" min="0" max="360">')
-
-        # initialize elements and create hooks to auto update on changes
-        if @model
-            @updateValues()
-            @model.on 'change', @updateValues, this
-
-    updateValues: ->
-        return if !@model
-        @$el.find('#slider').val(@model.get('orientationValue'))
-        @$el.find('#display').text(@model.get('orientationValue'))
-
-    sliderChanged: (event) ->
-        return if !@model
-        @model.set(orientationValue: $(event.target).val())
+        # when a client's (actual) target value changes, emit a message to notify the client
+        @view.collection.on 'change:targetOrientationValue', (model, value, obj) =>
+            console.log 'emit'
+            @server.emit('orient-config', sessionId: model.id, targetOrientationValue: value)
 
 
 class OrientCmsView extends Backbone.View
@@ -82,7 +61,9 @@ class OrientCmsView extends Backbone.View
     _addItemView: (model) ->
         view = new OrientCmsItemView(model: model)
         model.cmsView = view
+        $(view.el).addClass('client')
         @$el.append view.el
+
 
 
 class OrientCmsItemView extends Backbone.View
@@ -100,6 +81,7 @@ class OrientCmsItemView extends Backbone.View
         @$el.append('<p id="orientation"></p>')
         @$el.append('<p id="position"></p>')
         @$el.append('<p id="target"><span id="display">0</span><input type="range" value="0" min="0" max="360" /><a href="#" id="reset">reset</a></p>')
+        @$el.append('<p id="visualize">Visualization enabled: <select><option value="global">Use Global</option><option value="1">Enabled</option><option value="0">Disabled</option></select></p>')
 
 
         @updateValues()
@@ -109,11 +91,16 @@ class OrientCmsItemView extends Backbone.View
 
     updateValues: ->
         return if !@model
-        @$el.find('p#orientation').text 'Orientation: ' + _.map( @model.get('orientation').toArray(), (str) -> str.toString().substring(0, 5) ).join(', ')
-        @$el.find('p#position').text 'Position: ' + _.map( @model.get('position').toArray(), (str) -> str.toString().substring(0, 5) ).join(', ')
-        targetVal = @model.get('targetOrientationValue')
+        if val = @model.get('orientation')
+            @$el.find('p#orientation').text 'Orientation: ' + _.map( val.toArray(), (angle) -> Math.floor(angle/Math.PI*180) ).join(', ')
+
+        if val = @model.get('position')
+            @$el.find('p#position').text 'Position: ' + _.map( val.toArray(), (str) -> str.toString().substring(0, 5) ).join(', ')
+
+        targetVal = @model.get('targetOrientationValue') || 0
         @$el.find('p#target #display').text 'targetOrientationValue: ' + targetVal
         @$el.find('p#target input').val targetVal
+
 
         resetEl = @$el.find('p#target #reset')
         if @model.get('customTargetOrientationValue')

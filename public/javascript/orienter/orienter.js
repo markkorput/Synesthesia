@@ -37,13 +37,15 @@
           return _this.setupTracking(false);
         }
       });
-      this.server.on('targetOrientationValue', function(data) {
+      this.server.on('orient-config', function(data) {
         if (data.sessionId !== _this.sessionId) {
           return;
         }
-        _this.targetVal = data.value;
-        _this.log('target-direction', _this.targetVal);
-        return _this.updateDistance();
+        if (data.targetOrientationValue) {
+          _this.targetVal = data.targetOrientationValue;
+          _this.log('target-direction', _this.targetVal);
+          return _this.updateDistance();
+        }
       });
       this.twoEl = document.getElementById('anim');
       this.two = new Two({

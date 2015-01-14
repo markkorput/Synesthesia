@@ -29,11 +29,13 @@ class Orienter
       else
         @setupTracking(false)
 
-    @server.on 'targetOrientationValue', (data) =>
+    @server.on 'orient-config', (data) =>
       return if data.sessionId != @sessionId # not for us
-      @targetVal = data.value
-      @log 'target-direction', @targetVal
-      @updateDistance()
+
+      if data.targetOrientationValue
+        @targetVal = data.targetOrientationValue
+        @log 'target-direction', @targetVal
+        @updateDistance()
 
     @twoEl = document.getElementById('anim');
     @two = new Two(fullscreen: true).appendTo(@twoEl)

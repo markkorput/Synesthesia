@@ -240,8 +240,9 @@ orients.on('connection', function (o) {
   //   data.cid = this.id;
   //   emitData('accelerationData', data);
   // });
-  o.on('targetOrientationValue', function(data){
-    orienter.emit('targetOrientationValue', data);
+  o.on('orient-config', function(data){
+    // console.log('orient-cfg', data);
+    orienter.emit('orient-config', data);
   });
 });
 

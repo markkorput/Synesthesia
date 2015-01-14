@@ -66,7 +66,7 @@ class Orients
         @globalTargetRotator.add @globalTargetMesh
         @scene.add @globalTargetRotator
 
-        @cms.targetControlView.model.on 'change:orientationValue', (model, value, obj) =>
+        @cms.globalItemView.model.on 'change:targetOrientationValue', (model, value, obj) =>
             @globalTargetRotator.rotation.y = value / 180 * Math.PI
 
     updateGlobalTarget: ->
