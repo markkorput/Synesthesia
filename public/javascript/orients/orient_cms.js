@@ -57,8 +57,12 @@
         });
       });
       this.view.collection.on('add', function(model) {
-        return model.set({
+        model.set({
           targetOrientationValue: globalModel.get('orientationValue')
+        });
+        return model.set({
+          blink: globalModel.get('blink'),
+          visualize: globalModel.get('visualize')
         });
       });
       this.view.collection.on('change:customVisualizeValue', function(model, val, obj) {

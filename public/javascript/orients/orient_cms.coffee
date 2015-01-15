@@ -41,6 +41,10 @@ class @OrientCms
         # create visual elements for every new connecting client
         @view.collection.on 'add', (model) =>
             model.set(targetOrientationValue: globalModel.get('orientationValue'))
+            model.set
+                blink: globalModel.get('blink')
+                visualize: globalModel.get('visualize')
+
 
         @view.collection.on 'change:customVisualizeValue', (model, val, obj) =>
             if val != true

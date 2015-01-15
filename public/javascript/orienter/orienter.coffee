@@ -14,8 +14,46 @@ class OrientModel extends Backbone.Model
     @set(orientationDistance: dist)
 
 
+
+class Blinker
+  constructor: (opts) ->
+    # @options = opts || {}
+    @two = opts.two
+    @enabled = false
+    @timeout = 180
+    @lastBlinkFrame = 0
+    @visible = false
+
+  enable: (_enable) ->
+    @enabled = _enable
+    @showBlinker(_enable)
+
+  update: (frameCount) ->
+    return if !@enabled
+    nextBlink = @lastBlinkFrame + @timeout
+    # console.log nextBlink, frameCount
+    if frameCount >= nextBlink
+      @lastBlinkFrame = frameCount
+      @showBlinker(!@visible)
+
+  showBlinker: (_show) ->
+    # show or hide the blinker circle
+    if _show
+      if !@blinkCircle
+        @blinkCircle ||= @two.makeCircle(@two.width/2, @two.height/2, 50)
+        @blinkCircle.noStroke()
+        @blinkCircle.fill = 'white'
+      @blinkCircle.opacity = 0.5
+    else
+      @blinkCircle.opacity = 0.0 if @blinkCircle
+
+    @visible = _show
+
+
 $(document).ready ->
   window.orienter = new Orienter()
+
+
 
 class Orienter
   constructor: (opts) ->
@@ -64,19 +102,25 @@ class Orienter
 
     @model.on 'change:blink', (model,val,obj) =>
       @log 'blink', val
+      @blinker.enable(val)
+      
 
     @model.on 'change:orientationDistance', (model,val,obj) =>
       @log 'direction-delta', Math.abs(val)
+      @blinker.timeout = val * 0.6
 
     @twoEl = document.getElementById('anim');
     @two = new Two(fullscreen: true).appendTo(@twoEl)
 
+    @blinker = new Blinker(two: @two)
     @loadVisualizer()
 
-
-
-    # @two.bind 'update', @update
+    @two.bind 'update', @update
     @two.play()
+
+
+  update: (frameCount) =>
+    @blinker.update(frameCount)
 
   loadVisualizer: (_load) ->
     if _load == false
@@ -97,11 +141,10 @@ class Orienter
       @rotator ||= @two.makeGroup(@c2)
       @rotator.translation.set(@two.width/2, @two.height/2)
 
+
   _updateVisualizerRotation: ->
     return if !@rotator || !@model
     @rotator.rotation = ((@model.get('orientationValue') || 0) - (@model.get('targetOrientationValue') || 0)) / 180 * Math.PI
-
-  # update: (frameCount) =>
 
 
   setupTracking: (_setup) ->
@@ -113,11 +156,13 @@ class Orienter
     else
       @log 'status', 'Motion tracking off.'
 
+
   setupMotionListener: (_setup) ->
     if _setup == true || _setup == undefined
       window.addEventListener 'deviceorientation', @onDeviceMotion
     else
       window.removeEventListener 'deviceorientation', @onDeviceMotion
+
 
   setupAccelListener: (_setup) ->
     if _setup == true || _setup == undefined
@@ -125,10 +170,12 @@ class Orienter
     else
       window.removeEventListener 'devicemotion', @onDeviceAccel
 
+
   onDeviceMotion: (event) =>
     @server.emit('motionData', {alpha: event.alpha, beta: event.beta, gamma: event.gamma,});
     @log 'orientation', _.map([event.alpha, event.beta, event.gamma], (val) -> Math.floor(val)).join(', ')
     @model.set(orientationValue: Math.floor(event.alpha || 0))
+
 
   onDeviceAccel: (event) =>
     @server.emit 'accelerationData',
@@ -136,6 +183,7 @@ class Orienter
       acceleration: event.acceleration
       accelerationIncludingGravity: event.accelerationIncludingGravity
     @log 'acceleration', _.map([event.accelerationIncludingGravity.x, event.accelerationIncludingGravity.y, event.accelerationIncludingGravity.z], (val) -> Math.floor(val)).join(', ')
+
 
   updateDistance: ->
     return if @currentVal == undefined || @targetVal == undefined
@@ -152,6 +200,7 @@ class Orienter
   # LOGGING
   #
 
+
   _logsContainer: ->
     @$_logsContainerEl ||= $('#logs')
     if @$_logsContainerEl.length == 0
@@ -159,6 +208,7 @@ class Orienter
       @$_logsContainerEl = $('#logs')
 
     return @$_logsContainerEl
+
 
   _logValueElFor: (subject) ->
     logsContainer = @_logsContainer()
@@ -169,6 +219,7 @@ class Orienter
 
     # lbl = logField.find('.label')
     return logField.find('.value')
+
 
   log: (subject, message) -> 
     if message == undefined
