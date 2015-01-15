@@ -100,15 +100,10 @@ class Orienter
         @loadVisualizer(false)
 
     @model.on 'change:blink', (model,val,obj) =>
-      @log 'blink', val
       @blinker.enable(val)
 
     @model.on 'change:tempo', (model,val,obj) =>
-      @log 'tempo', val
-      if val == true
-        @orienterAudio.start()
-      else
-        @orienterAudio.stop()
+      @orienterAudio.start(val)
 
     @model.on 'change:orientationDistance', (model,val,obj) =>
       @log 'direction-delta', Math.abs(val)

@@ -1,6 +1,25 @@
 $(document).ready ->
   window.orients = new Orients()
 
+
+class OrientModel extends Backbone.Model
+    initialize: ->
+        @set(lastOrientationTime: new Date().getTime())
+        @on 'change:orientation', (model, val, obj) ->
+            model.set(lastOrientationTime: new Date().getTime())
+
+
+class OrientCollection extends Backbone.Collection
+    model: OrientModel
+
+    initialize: ->
+        # auto-remove clients that haven't send an orientation update for 3 seconds
+        @on 'change:orientation', (model, val, obj) =>
+            time = new Date().getTime()
+            @each (m) =>
+                if time - (m.get('lastOrientationTime') || time) > 3000 # 3 seconds
+                    @remove m
+
 class Orients
     constructor: (opts) ->
         @options = opts || {}
@@ -12,7 +31,7 @@ class Orients
         @server.on 'motionData', (data) =>
             @processMotionData(data)
 
-        @clients = new Backbone.Collection()
+        @clients = new OrientCollection()
 
         @initScene()
         @animate()
@@ -27,6 +46,10 @@ class Orients
                     model.clientOrient.mesh.material.color.setHex(0xBBBBFF)
                 else
                     model.clientOrient.mesh.material.color.setHex(0xFF0000)
+
+        @clients.on 'remove', (model) =>
+            if model.clientOrient
+                @scene.remove model.clientOrient.mesh
 
         @cms = new OrientCms(clients: @clients, server: @server)
         @initGlobalTarget()
@@ -84,22 +107,25 @@ class Orients
         requestAnimationFrame =>
             @animate()
 
-        # @update(0.032) # 30fps
+        @update(0.032) # 30fps
         @draw()
 
-    # update: (dt) ->
+    update: (dt) ->
+
 
     draw: ->
         @renderer.render @scene, @camera
 
     processMotionData: (data) ->
+        # convert values from degrees to radians (?)
         vec3 = new THREE.Vector3(data.beta / 180 * Math.PI, data.alpha / 180 * Math.PI, -data.gamma / 180 * Math.PI)
 
+        # update existing model or create a new one
         if model = @clients.get(data.cid)
             model.set(orientation: vec3)
         else
             pos = new THREE.Vector3(-50+Math.random()*100, 0, -50+Math.random()*100)
-            model = new Backbone.Model(id: data.cid, orientation: vec3, position: pos)
+            model = new OrientModel(id: data.cid, orientation: vec3, position: pos)
             @clients.add model
             clientOrient = new ClientOrient(model: model)
             model.clientOrient = clientOrient
@@ -132,4 +158,3 @@ class ClientOrient
 
             if value = @model.get('position')
                 @mesh.position.fromArray value.toArray()
-

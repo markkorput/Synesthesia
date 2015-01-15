@@ -127,8 +127,13 @@
         this.collection.each(function(model) {
           return _this._addItemView(model);
         });
-        return this.collection.on('add', function(model) {
+        this.collection.on('add', function(model) {
           return _this._addItemView(model);
+        });
+        return this.collection.on('remove', function(model) {
+          if (model.cmsView) {
+            return model.cmsView.remove();
+          }
         });
       }
     };

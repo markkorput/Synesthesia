@@ -15,7 +15,6 @@ class @OrientCms
         @view.$el.prepend(@globalItemView.el)
         $(@globalItemView.el).addClass('global')
 
-
         # when a client gets highlighted, "UNhighlight" all others
         opts.clients.on 'change:highlighted', (model, value, obj) ->
             if value == true
@@ -61,7 +60,6 @@ class @OrientCms
         @view.collection.on 'change:targetOrientationValue', (model, value, obj) =>
             @server.emit('orient-config', sessionId: model.id, targetOrientationValue: value)
 
-
     _pushGlobalBool: (prop, val) =>
         @view.collection.each (clientModel) =>
             if clientModel.get(prop+'CustomValue') != true
@@ -80,6 +78,10 @@ class OrientCmsView extends Backbone.View
 
             @collection.on 'add', (model) =>
                 @_addItemView(model)
+
+            @collection.on 'remove', (model) ->
+                if model.cmsView
+                    model.cmsView.remove()
 
     _addItemView: (model) ->
         view = new OrientCmsItemView(model: model)

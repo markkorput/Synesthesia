@@ -47,6 +47,9 @@
         return;
       }
       this.stop();
+      if (trackidx === false) {
+        return;
+      }
       if (trckidx === void 0) {
         trckidx = parseInt(Math.random() * this.bufferList.length);
       }
