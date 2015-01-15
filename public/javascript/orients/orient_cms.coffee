@@ -29,8 +29,9 @@ class @OrientCms
                 clientModel.set(globalTargetOrientationValue: val)
 
         # when global target control model's value changes, propagate this change to all client models
-        globalModel.on 'change:visualize', @_pushVisualize
-        globalModel.on 'change:blink', @_pushBlink
+        globalModel.on 'change:visualize', (model, val, obj) => @_pushGlobalBool('visualize', val)
+        globalModel.on 'change:blink', (model, val, obj) => @_pushGlobalBool('blink', val)
+        globalModel.on 'change:tempo', (model, val, obj) => @_pushGlobalBool('tempo', val)
 
         # each client gets the 'globalTargetOrientationValue', but only for the ones that don't have a custom target value,
         # this global value will be applied as actual target value
@@ -45,34 +46,25 @@ class @OrientCms
                 blink: globalModel.get('blink')
                 visualize: globalModel.get('visualize')
 
+        _.each ['visualize', 'blink', 'tempo'], (prop) =>
+            @view.collection.on 'change:'+prop+'CustomValue', (model, val, obj) =>
+                if val != true
+                    model.set(prop, globalModel.get(prop))
 
-        @view.collection.on 'change:customVisualizeValue', (model, val, obj) =>
-            if val != true
-                model.set(visualize: globalModel.get('visualize'))
-
-        @view.collection.on 'change:customBlinkValue', (model, val, obj) =>
-            if val != true
-                model.set(blink: globalModel.get('blink'))
+            @view.collection.on 'change:'+prop, (model, val, obj) =>
+                data = sessionId: model.id
+                data[prop] = val
+                @server.emit 'orient-config', data
 
         # when a client's (actual) target value changes, emit a message to notify the client
         @view.collection.on 'change:targetOrientationValue', (model, value, obj) =>
             @server.emit('orient-config', sessionId: model.id, targetOrientationValue: value)
 
-        @view.collection.on 'change:visualize', (model, value, obj) =>
-            @server.emit('orient-config', sessionId: model.id, visualize: value)
 
-        @view.collection.on 'change:blink', (model, value, obj) =>
-            @server.emit('orient-config', sessionId: model.id, blink: value)
-
-    _pushVisualize: (model, val, obj) =>
+    _pushGlobalBool: (prop, val) =>
         @view.collection.each (clientModel) =>
-            if clientModel.get('customVisualizeValue') != true
-                clientModel.set(visualize: val)
-
-    _pushBlink: (model, val, obj) =>
-        @view.collection.each (clientModel) =>
-            if clientModel.get('customBlinkValue') != true
-                clientModel.set(blink: val)
+            if clientModel.get(prop+'CustomValue') != true
+                clientModel.set(prop, val)
 
 class OrientCmsView extends Backbone.View
     tagName: 'div'
@@ -105,31 +97,50 @@ class OrientCmsItemView extends Backbone.View
         'mousedown #target input': '_onCustomTarget'
         'mousemove #target input': '_onCustomTargetUpdate'
         'click #target #reset': '_onResetCustomTarget'
-        'change #visualize select': '_onVisualizeChange'
-        'change #blink select': '_onBlinkChange'
-
+        'change #visualize select': '_onBoolControlChange'
+        'change #blink select': '_onBoolControlChange'
 
     initialize: ->
         @$el.append('<p id="orientation"></p>')
         @$el.append('<p id="position"></p>')
         @$el.append('<p id="target"><span id="display">0</span><input type="range" value="0" min="0" max="360" /><a href="#" id="reset">reset</a></p>')
 
-        if @model.get('global')
-            global_option = ''
-        else
-            global_option = '<option value="global">Use Global</option>'
-
-        @$el.append('<p id="visualize">Visualization enabled: <select>'+global_option+'<option value="1">Enabled</option><option value="0">Disabled</option></select></p>')
-
-        @$el.append('<p id="blink">Blink enabled: <select>'+global_option+'<option value="1">Enabled</option><option value="0">Disabled</option></select></p>')
+        @_appendBoolControl('visualize')
+        @_appendBoolControl('blink')
+        @_appendBoolControl('tempo')
 
         @updateValues()
 
         if @model
             @model.on 'change', @updateValues, this
 
+    _appendBoolControl: (propName) ->
+        if @model && @model.get('global')
+            global_option = ''
+        else
+            global_option = '<option value="global">Use Global</option>'
+
+        @$el.append('<p id="'+propName+'">'+propName+': <select>'+global_option+'<option value="1">On</option><option value="0">Off</option></select></p>')
+
+    _updateBoolControl: (propName) ->
+        lineEl = @$el.find('#'+propName)
+
+        if @model.get(propName) == true
+            lineEl.addClass('enabled').removeClass('disabled')
+        else
+            lineEl.addClass('disabled').removeClass('enabled')
+
+        resetEl = lineEl.find('#reset')
+
+        if @model.get('global') != true && resetEl.length > 0
+            if @model.get(propName+'CustomValue') == true
+                resetEl.show()
+            else
+                resetEl.hide()
+
     updateValues: ->
         return if !@model
+
         if val = @model.get('orientation')
             @$el.find('p#orientation').text 'Orientation: ' + _.map( val.toArray(), (angle) -> Math.floor(angle/Math.PI*180) ).join(', ')
 
@@ -140,28 +151,14 @@ class OrientCmsItemView extends Backbone.View
         @$el.find('p#target #display').text 'targetOrientationValue: ' + targetVal
         @$el.find('p#target input').val targetVal
 
-        resetEl = @$el.find('p#target #reset')
-        if @model.get('customTargetOrientationValue')
-            resetEl.show()
-        else
-            resetEl.hide()
-
-        if @model.get('visualize') == true
-            @$el.find('#visualize').addClass('enabled').removeClass('disabled')
-        else
-            @$el.find('#visualize').addClass('disabled').removeClass('enabled')
-
-        if @model.get('blink') == true
-            @$el.find('#blink').addClass('enabled').removeClass('disabled')
-        else
-            @$el.find('#blink').addClass('disabled').removeClass('enabled')
+        @_updateBoolControl('blink')
+        @_updateBoolControl('visualize')
+        @_updateBoolControl('tempo')
 
         if @model.get('highlighted') == true
             @$el.addClass 'highlighted'
         else
             @$el.removeClass 'highlighted'
-
-
 
     _onHover: (evt) ->
         @model.set(highlighted: true)
@@ -177,16 +174,10 @@ class OrientCmsItemView extends Backbone.View
         @model.set(customTargetOrientationValue: false)
         @model.set(targetOrientationValue: @model.get('globalTargetOrientationValue'))
 
-    _onVisualizeChange: (evt) ->
-        val = $(evt.target).val()
-        if val == 'global'
-            @model.set(customVisualizeValue: false)
-        else
-            @model.set(customVisualizeValue: true, visualize: val == '1')
-
-    _onBlinkChange: (evt) ->
-        val = $(evt.target).val()
-        if val == 'global'
-            @model.set(customBlinkValue: false)
-        else
-            @model.set(customBlinkValue: true, blink: val == '1')
+    _onBoolControlChange: (evt) ->
+        el = $(evt.target)
+        id = el.parent().prop('id')
+        val = el.val()
+        @model.set(id+'CustomValue', val != 'global')
+        if val != 'global'
+            @model.set(id, val == '1')

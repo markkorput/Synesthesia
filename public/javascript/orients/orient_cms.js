@@ -7,8 +7,7 @@
 
   this.OrientCms = (function() {
     function OrientCms(opts) {
-      this._pushBlink = __bind(this._pushBlink, this);
-      this._pushVisualize = __bind(this._pushVisualize, this);
+      this._pushGlobalBool = __bind(this._pushGlobalBool, this);
       var globalModel,
         _this = this;
       this.options = opts || {};
@@ -46,8 +45,15 @@
           });
         });
       });
-      globalModel.on('change:visualize', this._pushVisualize);
-      globalModel.on('change:blink', this._pushBlink);
+      globalModel.on('change:visualize', function(model, val, obj) {
+        return _this._pushGlobalBool('visualize', val);
+      });
+      globalModel.on('change:blink', function(model, val, obj) {
+        return _this._pushGlobalBool('blink', val);
+      });
+      globalModel.on('change:tempo', function(model, val, obj) {
+        return _this._pushGlobalBool('tempo', val);
+      });
       this.view.collection.on('change:globalTargetOrientationValue', function(model, val, obj) {
         if (model.get('customTargetOrientationValue') === true) {
           return;
@@ -65,19 +71,20 @@
           visualize: globalModel.get('visualize')
         });
       });
-      this.view.collection.on('change:customVisualizeValue', function(model, val, obj) {
-        if (val !== true) {
-          return model.set({
-            visualize: globalModel.get('visualize')
-          });
-        }
-      });
-      this.view.collection.on('change:customBlinkValue', function(model, val, obj) {
-        if (val !== true) {
-          return model.set({
-            blink: globalModel.get('blink')
-          });
-        }
+      _.each(['visualize', 'blink', 'tempo'], function(prop) {
+        _this.view.collection.on('change:' + prop + 'CustomValue', function(model, val, obj) {
+          if (val !== true) {
+            return model.set(prop, globalModel.get(prop));
+          }
+        });
+        return _this.view.collection.on('change:' + prop, function(model, val, obj) {
+          var data;
+          data = {
+            sessionId: model.id
+          };
+          data[prop] = val;
+          return _this.server.emit('orient-config', data);
+        });
       });
       this.view.collection.on('change:targetOrientationValue', function(model, value, obj) {
         return _this.server.emit('orient-config', {
@@ -85,38 +92,13 @@
           targetOrientationValue: value
         });
       });
-      this.view.collection.on('change:visualize', function(model, value, obj) {
-        return _this.server.emit('orient-config', {
-          sessionId: model.id,
-          visualize: value
-        });
-      });
-      this.view.collection.on('change:blink', function(model, value, obj) {
-        return _this.server.emit('orient-config', {
-          sessionId: model.id,
-          blink: value
-        });
-      });
     }
 
-    OrientCms.prototype._pushVisualize = function(model, val, obj) {
+    OrientCms.prototype._pushGlobalBool = function(prop, val) {
       var _this = this;
       return this.view.collection.each(function(clientModel) {
-        if (clientModel.get('customVisualizeValue') !== true) {
-          return clientModel.set({
-            visualize: val
-          });
-        }
-      });
-    };
-
-    OrientCms.prototype._pushBlink = function(model, val, obj) {
-      var _this = this;
-      return this.view.collection.each(function(clientModel) {
-        if (clientModel.get('customBlinkValue') !== true) {
-          return clientModel.set({
-            blink: val
-          });
+        if (clientModel.get(prop + 'CustomValue') !== true) {
+          return clientModel.set(prop, val);
         }
       });
     };
@@ -180,30 +162,53 @@
       'mousedown #target input': '_onCustomTarget',
       'mousemove #target input': '_onCustomTargetUpdate',
       'click #target #reset': '_onResetCustomTarget',
-      'change #visualize select': '_onVisualizeChange',
-      'change #blink select': '_onBlinkChange'
+      'change #visualize select': '_onBoolControlChange',
+      'change #blink select': '_onBoolControlChange'
     };
 
     OrientCmsItemView.prototype.initialize = function() {
-      var global_option;
       this.$el.append('<p id="orientation"></p>');
       this.$el.append('<p id="position"></p>');
       this.$el.append('<p id="target"><span id="display">0</span><input type="range" value="0" min="0" max="360" /><a href="#" id="reset">reset</a></p>');
-      if (this.model.get('global')) {
-        global_option = '';
-      } else {
-        global_option = '<option value="global">Use Global</option>';
-      }
-      this.$el.append('<p id="visualize">Visualization enabled: <select>' + global_option + '<option value="1">Enabled</option><option value="0">Disabled</option></select></p>');
-      this.$el.append('<p id="blink">Blink enabled: <select>' + global_option + '<option value="1">Enabled</option><option value="0">Disabled</option></select></p>');
+      this._appendBoolControl('visualize');
+      this._appendBoolControl('blink');
+      this._appendBoolControl('tempo');
       this.updateValues();
       if (this.model) {
         return this.model.on('change', this.updateValues, this);
       }
     };
 
+    OrientCmsItemView.prototype._appendBoolControl = function(propName) {
+      var global_option;
+      if (this.model && this.model.get('global')) {
+        global_option = '';
+      } else {
+        global_option = '<option value="global">Use Global</option>';
+      }
+      return this.$el.append('<p id="' + propName + '">' + propName + ': <select>' + global_option + '<option value="1">On</option><option value="0">Off</option></select></p>');
+    };
+
+    OrientCmsItemView.prototype._updateBoolControl = function(propName) {
+      var lineEl, resetEl;
+      lineEl = this.$el.find('#' + propName);
+      if (this.model.get(propName) === true) {
+        lineEl.addClass('enabled').removeClass('disabled');
+      } else {
+        lineEl.addClass('disabled').removeClass('enabled');
+      }
+      resetEl = lineEl.find('#reset');
+      if (this.model.get('global') !== true && resetEl.length > 0) {
+        if (this.model.get(propName + 'CustomValue') === true) {
+          return resetEl.show();
+        } else {
+          return resetEl.hide();
+        }
+      }
+    };
+
     OrientCmsItemView.prototype.updateValues = function() {
-      var resetEl, targetVal, val;
+      var targetVal, val;
       if (!this.model) {
         return;
       }
@@ -220,22 +225,9 @@
       targetVal = this.model.get('targetOrientationValue') || 0;
       this.$el.find('p#target #display').text('targetOrientationValue: ' + targetVal);
       this.$el.find('p#target input').val(targetVal);
-      resetEl = this.$el.find('p#target #reset');
-      if (this.model.get('customTargetOrientationValue')) {
-        resetEl.show();
-      } else {
-        resetEl.hide();
-      }
-      if (this.model.get('visualize') === true) {
-        this.$el.find('#visualize').addClass('enabled').removeClass('disabled');
-      } else {
-        this.$el.find('#visualize').addClass('disabled').removeClass('enabled');
-      }
-      if (this.model.get('blink') === true) {
-        this.$el.find('#blink').addClass('enabled').removeClass('disabled');
-      } else {
-        this.$el.find('#blink').addClass('disabled').removeClass('enabled');
-      }
+      this._updateBoolControl('blink');
+      this._updateBoolControl('visualize');
+      this._updateBoolControl('tempo');
       if (this.model.get('highlighted') === true) {
         return this.$el.addClass('highlighted');
       } else {
@@ -273,33 +265,14 @@
       });
     };
 
-    OrientCmsItemView.prototype._onVisualizeChange = function(evt) {
-      var val;
-      val = $(evt.target).val();
-      if (val === 'global') {
-        return this.model.set({
-          customVisualizeValue: false
-        });
-      } else {
-        return this.model.set({
-          customVisualizeValue: true,
-          visualize: val === '1'
-        });
-      }
-    };
-
-    OrientCmsItemView.prototype._onBlinkChange = function(evt) {
-      var val;
-      val = $(evt.target).val();
-      if (val === 'global') {
-        return this.model.set({
-          customBlinkValue: false
-        });
-      } else {
-        return this.model.set({
-          customBlinkValue: true,
-          blink: val === '1'
-        });
+    OrientCmsItemView.prototype._onBoolControlChange = function(evt) {
+      var el, id, val;
+      el = $(evt.target);
+      id = el.parent().prop('id');
+      val = el.val();
+      this.model.set(id + 'CustomValue', val !== 'global');
+      if (val !== 'global') {
+        return this.model.set(id, val === '1');
       }
     };
 
