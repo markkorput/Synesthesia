@@ -113,7 +113,7 @@
       return _ref;
     }
 
-    OrientCmsView.prototype.tagName = 'div';
+    OrientCmsView.prototype.tagName = 'ul';
 
     OrientCmsView.prototype.className = 'orient-cms-view';
 
@@ -156,7 +156,7 @@
       return _ref1;
     }
 
-    OrientCmsItemView.prototype.tagName = 'div';
+    OrientCmsItemView.prototype.tagName = 'li';
 
     OrientCmsItemView.prototype.className = 'orient-cms-item-view';
 
@@ -198,7 +198,7 @@
       } else {
         global_option = '<option value="global">Use Global</option>';
       }
-      return this.$el.append('<p id="' + propName + '">' + propName + ': <select>' + global_option + '<option value="1">On</option><option value="0">Off</option></select></p>');
+      return this.$el.append('<p id="' + propName + '"><select>' + global_option + '<option value="1">On</option><option value="0">Off</option></select></p>');
     };
 
     OrientCmsItemView.prototype._updateBoolControl = function(propName) {
@@ -225,17 +225,17 @@
         return;
       }
       if (val = this.model.get('orientation')) {
-        this.$el.find('p#orientation').text('Orientation: ' + _.map(val.toArray(), function(angle) {
+        this.$el.find('p#orientation').text(_.map(val.toArray(), function(angle) {
           return Math.floor(angle / Math.PI * 180);
         }).join(', '));
       }
       if (val = this.model.get('position')) {
-        this.$el.find('p#position').text('Position: ' + _.map(val.toArray(), function(str) {
+        this.$el.find('p#position').text(_.map(val.toArray(), function(str) {
           return str.toString().substring(0, 5);
         }).join(', '));
       }
       targetVal = this.model.get('targetOrientationValue') || 0;
-      this.$el.find('p#target #display').text('targetOrientationValue: ' + targetVal);
+      this.$el.find('p#target #display').text(targetVal);
       this.$el.find('p#target input').val(targetVal);
       this._updateBoolControl('blink');
       this._updateBoolControl('visualize');

@@ -98,7 +98,7 @@
       this.renderer = new THREE.WebGLRenderer();
       this._resize();
       $(window).resize(this._resize);
-      document.body.appendChild(this.renderer.domElement);
+      $('#header').before(this.renderer.domElement);
       this.scene = new THREE.Scene();
       this.camera.position.set(0, 300, 0);
       this.camera.lookAt(this.scene.position);

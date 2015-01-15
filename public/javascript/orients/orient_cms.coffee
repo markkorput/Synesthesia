@@ -65,7 +65,7 @@ class @OrientCms
                 clientModel.set(prop, val)
 
 class OrientCmsView extends Backbone.View
-    tagName: 'div'
+    tagName: 'ul'
     className: 'orient-cms-view'
 
     initialize: ->
@@ -91,7 +91,7 @@ class OrientCmsView extends Backbone.View
 
 
 class OrientCmsItemView extends Backbone.View
-    tagName: 'div'
+    tagName: 'li'
     className: 'orient-cms-item-view'
 
     events:
@@ -131,7 +131,7 @@ class OrientCmsItemView extends Backbone.View
         else
             global_option = '<option value="global">Use Global</option>'
 
-        @$el.append('<p id="'+propName+'">'+propName+': <select>'+global_option+'<option value="1">On</option><option value="0">Off</option></select></p>')
+        @$el.append('<p id="'+propName+'"><select>'+global_option+'<option value="1">On</option><option value="0">Off</option></select></p>')
 
     _updateBoolControl: (propName) ->
         lineEl = @$el.find('#'+propName)
@@ -153,13 +153,13 @@ class OrientCmsItemView extends Backbone.View
         return if !@model
 
         if val = @model.get('orientation')
-            @$el.find('p#orientation').text 'Orientation: ' + _.map( val.toArray(), (angle) -> Math.floor(angle/Math.PI*180) ).join(', ')
+            @$el.find('p#orientation').text _.map( val.toArray(), (angle) -> Math.floor(angle/Math.PI*180) ).join(', ')
 
         if val = @model.get('position')
-            @$el.find('p#position').text 'Position: ' + _.map( val.toArray(), (str) -> str.toString().substring(0, 5) ).join(', ')
+            @$el.find('p#position').text _.map( val.toArray(), (str) -> str.toString().substring(0, 5) ).join(', ')
 
         targetVal = @model.get('targetOrientationValue') || 0
-        @$el.find('p#target #display').text 'targetOrientationValue: ' + targetVal
+        @$el.find('p#target #display').text targetVal
         @$el.find('p#target input').val targetVal
 
         @_updateBoolControl('blink')

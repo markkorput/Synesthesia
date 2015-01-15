@@ -64,7 +64,7 @@ class Orients
         @_resize()
         $(window).resize @_resize
 
-        document.body.appendChild( @renderer.domElement );
+        $('#header').before( @renderer.domElement );
 
         @scene = new THREE.Scene()
 
