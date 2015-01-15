@@ -5,6 +5,10 @@
     __hasProp = {}.hasOwnProperty,
     __extends = function(child, parent) { for (var key in parent) { if (__hasProp.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; };
 
+  $(document).ready(function() {
+    return window.orienter = new Orienter();
+  });
+
   OrientModel = (function(_super) {
     __extends(OrientModel, _super);
 
@@ -27,7 +31,7 @@
         return;
       }
       if (target > 180) {
-        target = 180 - (targettargetVa - 180);
+        target = 180 - (target - 180);
       }
       if (current > 180) {
         current = 180 - (current - 180);
@@ -87,10 +91,6 @@
     return Blinker;
 
   })();
-
-  $(document).ready(function() {
-    return window.orienter = new Orienter();
-  });
 
   Orienter = (function() {
     function Orienter(opts) {
@@ -153,22 +153,39 @@
       });
       this.model.on('change:orientationDistance', function(model, val, obj) {
         _this.log('direction-delta', Math.abs(val));
-        return _this.blinker.timeout = val * 0.6;
+        if (_this.blinker) {
+          _this.blinker.timeout = val;
+        }
+        if (_this.orienterAudio) {
+          return _this.orienterAudio.apply(1.0 + val * 0.03);
+        }
       });
       this.twoEl = document.getElementById('anim');
       this.two = new Two({
         fullscreen: true
       }).appendTo(this.twoEl);
+      this.two.bind('update', this.update);
+      this.orienterAudio = new OrienterAudio();
+      $('#start a').click(function(evt) {
+        evt.preventDefault();
+        $('#start').hide();
+        return _this.start();
+      });
+    }
+
+    Orienter.prototype.start = function() {
+      this.loadVisualizer();
       this.blinker = new Blinker({
         two: this.two
       });
-      this.loadVisualizer();
-      this.two.bind('update', this.update);
-      this.two.play();
-    }
+      this.orienterAudio.start();
+      return this.two.play();
+    };
 
     Orienter.prototype.update = function(frameCount) {
-      return this.blinker.update(frameCount);
+      if (this.blinker) {
+        return this.blinker.update(frameCount);
+      }
     };
 
     Orienter.prototype.loadVisualizer = function(_load) {

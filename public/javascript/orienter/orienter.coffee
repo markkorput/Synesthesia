@@ -1,3 +1,7 @@
+$(document).ready ->
+  window.orienter = new Orienter()
+
+
 class OrientModel extends Backbone.Model
   initialize: ->
     @on 'change:targetOrientationValue', @_updateDistance
@@ -7,7 +11,7 @@ class OrientModel extends Backbone.Model
     target = @get('targetOrientationValue')
     current = @get('orientationValue')
     return if target == undefined || current == undefined
-    target = 180 - (targettargetVa - 180) if target > 180
+    target = 180 - (target - 180) if target > 180
     current= 180 - (current - 180) if current > 180
     dist = target-current
     # @log 'direction-delta', Math.abs(dist)
@@ -48,11 +52,6 @@ class Blinker
       @blinkCircle.opacity = 0.0 if @blinkCircle
 
     @visible = _show
-
-
-$(document).ready ->
-  window.orienter = new Orienter()
-
 
 
 class Orienter
@@ -103,24 +102,34 @@ class Orienter
     @model.on 'change:blink', (model,val,obj) =>
       @log 'blink', val
       @blinker.enable(val)
-      
 
     @model.on 'change:orientationDistance', (model,val,obj) =>
       @log 'direction-delta', Math.abs(val)
-      @blinker.timeout = val * 0.6
+      @blinker.timeout = val if @blinker
+      @orienterAudio.apply(1.0 + val * 0.03) if @orienterAudio
 
     @twoEl = document.getElementById('anim');
     @two = new Two(fullscreen: true).appendTo(@twoEl)
 
-    @blinker = new Blinker(two: @two)
-    @loadVisualizer()
-
     @two.bind 'update', @update
+
+    @orienterAudio = new OrienterAudio()
+
+    $('#start a').click (evt) =>
+      evt.preventDefault()
+      $('#start').hide()
+      @start()
+
+  start: ->
+    @loadVisualizer()
+    @blinker = new Blinker(two: @two)
+    
+    @orienterAudio.start()
     @two.play()
 
 
   update: (frameCount) =>
-    @blinker.update(frameCount)
+    @blinker.update(frameCount) if @blinker
 
   loadVisualizer: (_load) ->
     if _load == false
