@@ -17,6 +17,7 @@
         visualize: true,
         blink: false,
         tempo: false,
+        gain: false,
         global: true
       });
       this.view = new OrientCmsView({
@@ -46,15 +47,6 @@
           });
         });
       });
-      globalModel.on('change:visualize', function(model, val, obj) {
-        return _this._pushGlobalBool('visualize', val);
-      });
-      globalModel.on('change:blink', function(model, val, obj) {
-        return _this._pushGlobalBool('blink', val);
-      });
-      globalModel.on('change:tempo', function(model, val, obj) {
-        return _this._pushGlobalBool('tempo', val);
-      });
       this.view.collection.on('change:globalTargetOrientationValue', function(model, val, obj) {
         if (model.get('customTargetOrientationValue') === true) {
           return;
@@ -70,10 +62,14 @@
         return model.set({
           blink: globalModel.get('blink'),
           visualize: globalModel.get('visualize'),
-          tempo: globalModel.get('tempo')
+          tempo: globalModel.get('tempo'),
+          gain: globalModel.get('gain')
         });
       });
-      _.each(['visualize', 'blink', 'tempo'], function(prop) {
+      _.each(['visualize', 'blink', 'tempo', 'gain'], function(prop) {
+        globalModel.on('change:' + prop, function(model, val, obj) {
+          return _this._pushGlobalBool(prop, val);
+        });
         _this.view.collection.on('change:' + prop + 'CustomValue', function(model, val, obj) {
           if (val !== true) {
             return model.set(prop, globalModel.get(prop));
@@ -171,7 +167,8 @@
       'click #target #reset': '_onResetCustomTarget',
       'change #visualize select': '_onBoolControlChange',
       'change #blink select': '_onBoolControlChange',
-      'change #tempo select': '_onBoolControlChange'
+      'change #tempo select': '_onBoolControlChange',
+      'change #gain select': '_onBoolControlChange'
     };
 
     OrientCmsItemView.prototype.initialize = function() {
@@ -187,6 +184,7 @@
       this._appendBoolControl('visualize');
       this._appendBoolControl('blink');
       this._appendBoolControl('tempo');
+      this._appendBoolControl('gain');
       this.updateValues();
       if (this.model) {
         return this.model.on('change', this.updateValues, this);
@@ -242,6 +240,7 @@
       this._updateBoolControl('blink');
       this._updateBoolControl('visualize');
       this._updateBoolControl('tempo');
+      this._updateBoolControl('gain');
       if (this.model.get('highlighted') === true) {
         return this.$el.addClass('highlighted');
       } else {

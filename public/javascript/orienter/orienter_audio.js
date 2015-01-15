@@ -31,10 +31,14 @@
       bufferLoader.load();
     }
 
-    OrienterAudio.prototype.apply = function(val) {
+    OrienterAudio.prototype.applyTempo = function(val) {
       if (this.source) {
         return this.source.playbackRate.value = val;
       }
+    };
+
+    OrienterAudio.prototype.applyGain = function(val) {
+      return this.setGain(val);
     };
 
     OrienterAudio.prototype.start = function(trckidx) {

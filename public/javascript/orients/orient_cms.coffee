@@ -4,7 +4,7 @@ class @OrientCms
 
         @server = opts.server
 
-        globalModel = new Backbone.Model(orientationValue: 0, visualize: true, blink: false, tempo: false, global: true)
+        globalModel = new Backbone.Model(orientationValue: 0, visualize: true, blink: false, tempo: false, gain: false, global: true)
         
         @view = new OrientCmsView(collection: opts.clients)
         document.body.appendChild( @view.el );
@@ -27,11 +27,6 @@ class @OrientCms
             @view.collection.each (clientModel) =>
                 clientModel.set(globalTargetOrientationValue: val)
 
-        # when global target control model's value changes, propagate this change to all client models
-        globalModel.on 'change:visualize', (model, val, obj) => @_pushGlobalBool('visualize', val)
-        globalModel.on 'change:blink', (model, val, obj) => @_pushGlobalBool('blink', val)
-        globalModel.on 'change:tempo', (model, val, obj) => @_pushGlobalBool('tempo', val)
-
         # each client gets the 'globalTargetOrientationValue', but only for the ones that don't have a custom target value,
         # this global value will be applied as actual target value
         @view.collection.on 'change:globalTargetOrientationValue', (model, val, obj) ->
@@ -45,8 +40,12 @@ class @OrientCms
                 blink: globalModel.get('blink')
                 visualize: globalModel.get('visualize')
                 tempo: globalModel.get('tempo')
+                gain: globalModel.get('gain')
 
-        _.each ['visualize', 'blink', 'tempo'], (prop) =>
+        _.each ['visualize', 'blink', 'tempo', 'gain'], (prop) =>
+            # when global target control model's value changes, propagate this change to all client models
+            globalModel.on 'change:'+prop, (model, val, obj) => @_pushGlobalBool(prop, val)
+
             @view.collection.on 'change:'+prop+'CustomValue', (model, val, obj) =>
                 if val != true
                     model.set(prop, globalModel.get(prop))
@@ -103,6 +102,7 @@ class OrientCmsItemView extends Backbone.View
         'change #visualize select': '_onBoolControlChange'
         'change #blink select': '_onBoolControlChange'
         'change #tempo select': '_onBoolControlChange'
+        'change #gain select': '_onBoolControlChange'
 
     initialize: ->
         @$el.append('<p id="orientation"></p>')
@@ -118,6 +118,7 @@ class OrientCmsItemView extends Backbone.View
         @_appendBoolControl('visualize')
         @_appendBoolControl('blink')
         @_appendBoolControl('tempo')
+        @_appendBoolControl('gain')
 
         @updateValues()
 
@@ -164,6 +165,7 @@ class OrientCmsItemView extends Backbone.View
         @_updateBoolControl('blink')
         @_updateBoolControl('visualize')
         @_updateBoolControl('tempo')
+        @_updateBoolControl('gain')
 
         if @model.get('highlighted') == true
             @$el.addClass 'highlighted'

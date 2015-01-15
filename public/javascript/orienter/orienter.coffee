@@ -7,6 +7,9 @@ class OrientModel extends Backbone.Model
     @on 'change:targetOrientationValue', @_updateDistance
     @on 'change:orientationValue', @_updateDistance
 
+    @on 'change:tempo', @_updateAudio
+    @on 'change:gain', @_updateAudio
+
   _updateDistance: =>
     target = @get('targetOrientationValue')
     current = @get('orientationValue')
@@ -17,7 +20,9 @@ class OrientModel extends Backbone.Model
     # @log 'direction-delta', Math.abs(dist)
     @set(orientationDistance: dist)
 
-
+  _updateAudio: =>
+    audioEnabled = @get('tempo') == true || @get('gain') == true
+    @set(audioEnabled: audioEnabled)
 
 class Blinker
   constructor: (opts) ->
@@ -102,15 +107,22 @@ class Orienter
     @model.on 'change:blink', (model,val,obj) =>
       @blinker.enable(val) if @blinker
 
-    @model.on 'change:tempo', (model,val,obj) =>
-      console.log val
-      @orienterAudio ||= @orienterAudio()
-      @orienterAudio.start(val)
-
     @model.on 'change:orientationDistance', (model,val,obj) =>
       @log 'direction-delta', Math.abs(val)
       @blinker.timeout = val if @blinker
-      @orienterAudio.apply(1.0 + val * 0.03) if @orienterAudio
+      @orienterAudio.applyTempo(1.0 + val * 0.03) if @orienterAudio && @model.get('tempo') == true
+      @orienterAudio.applyGain(1.0 - val / 180) if @orienterAudio && @model.get('gain') == true
+
+    @model.on 'change:gain', (model, val, obj) =>
+      if @orienterAudio
+        if val == true
+          @orienterAudio.applyGain(1.0 - model.get('orientationDistance') / 180)
+        else
+          @orienterAudio.applyGain(1.0)
+
+    @model.on 'change:audioEnabled', (model,val,obj) =>
+      @orienterAudio ||= @orienterAudio()
+      @orienterAudio.start(val)
 
     @twoEl = document.getElementById('anim');
     @two = new Two(fullscreen: true).appendTo(@twoEl)

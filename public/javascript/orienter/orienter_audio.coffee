@@ -50,8 +50,11 @@ class @OrienterAudio
 
     bufferLoader.load()
 
-  apply: (val) ->
+  applyTempo: (val) ->
     @source.playbackRate.value = val if @source
+
+  applyGain: (val) ->
+    @setGain val
 
   start: (trckidx) ->
     return if !@context

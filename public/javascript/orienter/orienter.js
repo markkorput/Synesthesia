@@ -13,6 +13,7 @@
     __extends(OrientModel, _super);
 
     function OrientModel() {
+      this._updateAudio = __bind(this._updateAudio, this);
       this._updateDistance = __bind(this._updateDistance, this);
       _ref = OrientModel.__super__.constructor.apply(this, arguments);
       return _ref;
@@ -20,7 +21,9 @@
 
     OrientModel.prototype.initialize = function() {
       this.on('change:targetOrientationValue', this._updateDistance);
-      return this.on('change:orientationValue', this._updateDistance);
+      this.on('change:orientationValue', this._updateDistance);
+      this.on('change:tempo', this._updateAudio);
+      return this.on('change:gain', this._updateAudio);
     };
 
     OrientModel.prototype._updateDistance = function() {
@@ -39,6 +42,14 @@
       dist = target - current;
       return this.set({
         orientationDistance: dist
+      });
+    };
+
+    OrientModel.prototype._updateAudio = function() {
+      var audioEnabled;
+      audioEnabled = this.get('tempo') === true || this.get('gain') === true;
+      return this.set({
+        audioEnabled: audioEnabled
       });
     };
 
@@ -152,19 +163,30 @@
           return _this.blinker.enable(val);
         }
       });
-      this.model.on('change:tempo', function(model, val, obj) {
-        console.log(val);
-        _this.orienterAudio || (_this.orienterAudio = _this.orienterAudio());
-        return _this.orienterAudio.start(val);
-      });
       this.model.on('change:orientationDistance', function(model, val, obj) {
         _this.log('direction-delta', Math.abs(val));
         if (_this.blinker) {
           _this.blinker.timeout = val;
         }
-        if (_this.orienterAudio) {
-          return _this.orienterAudio.apply(1.0 + val * 0.03);
+        if (_this.orienterAudio && _this.model.get('tempo') === true) {
+          _this.orienterAudio.applyTempo(1.0 + val * 0.03);
         }
+        if (_this.orienterAudio && _this.model.get('gain') === true) {
+          return _this.orienterAudio.applyGain(1.0 - val / 180);
+        }
+      });
+      this.model.on('change:gain', function(model, val, obj) {
+        if (_this.orienterAudio) {
+          if (val === true) {
+            return _this.orienterAudio.applyGain(1.0 - model.get('orientationDistance') / 180);
+          } else {
+            return _this.orienterAudio.applyGain(1.0);
+          }
+        }
+      });
+      this.model.on('change:audioEnabled', function(model, val, obj) {
+        _this.orienterAudio || (_this.orienterAudio = _this.orienterAudio());
+        return _this.orienterAudio.start(val);
       });
       this.twoEl = document.getElementById('anim');
       this.two = new Two({
