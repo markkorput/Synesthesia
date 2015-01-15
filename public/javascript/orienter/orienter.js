@@ -151,6 +151,14 @@
         _this.log('blink', val);
         return _this.blinker.enable(val);
       });
+      this.model.on('change:tempo', function(model, val, obj) {
+        _this.log('tempo', val);
+        if (val === true) {
+          return _this.orienterAudio.start();
+        } else {
+          return _this.orienterAudio.stop();
+        }
+      });
       this.model.on('change:orientationDistance', function(model, val, obj) {
         _this.log('direction-delta', Math.abs(val));
         if (_this.blinker) {

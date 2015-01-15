@@ -4,7 +4,7 @@ class @OrientCms
 
         @server = opts.server
 
-        globalModel = new Backbone.Model(orientationValue: 0, visualize: true, blink: false, global: true)
+        globalModel = new Backbone.Model(orientationValue: 0, visualize: true, blink: false, tempo: false, global: true)
         
         @view = new OrientCmsView(collection: opts.clients)
         document.body.appendChild( @view.el );
@@ -45,6 +45,7 @@ class @OrientCms
             model.set
                 blink: globalModel.get('blink')
                 visualize: globalModel.get('visualize')
+                tempo: globalModel.get('tempo')
 
         _.each ['visualize', 'blink', 'tempo'], (prop) =>
             @view.collection.on 'change:'+prop+'CustomValue', (model, val, obj) =>
@@ -99,6 +100,7 @@ class OrientCmsItemView extends Backbone.View
         'click #target #reset': '_onResetCustomTarget'
         'change #visualize select': '_onBoolControlChange'
         'change #blink select': '_onBoolControlChange'
+        'change #tempo select': '_onBoolControlChange'
 
     initialize: ->
         @$el.append('<p id="orientation"></p>')

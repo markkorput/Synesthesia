@@ -16,6 +16,7 @@
         orientationValue: 0,
         visualize: true,
         blink: false,
+        tempo: false,
         global: true
       });
       this.view = new OrientCmsView({
@@ -68,7 +69,8 @@
         });
         return model.set({
           blink: globalModel.get('blink'),
-          visualize: globalModel.get('visualize')
+          visualize: globalModel.get('visualize'),
+          tempo: globalModel.get('tempo')
         });
       });
       _.each(['visualize', 'blink', 'tempo'], function(prop) {
@@ -163,7 +165,8 @@
       'mousemove #target input': '_onCustomTargetUpdate',
       'click #target #reset': '_onResetCustomTarget',
       'change #visualize select': '_onBoolControlChange',
-      'change #blink select': '_onBoolControlChange'
+      'change #blink select': '_onBoolControlChange',
+      'change #tempo select': '_onBoolControlChange'
     };
 
     OrientCmsItemView.prototype.initialize = function() {

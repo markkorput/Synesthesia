@@ -103,6 +103,13 @@ class Orienter
       @log 'blink', val
       @blinker.enable(val)
 
+    @model.on 'change:tempo', (model,val,obj) =>
+      @log 'tempo', val
+      if val == true
+        @orienterAudio.start()
+      else
+        @orienterAudio.stop()
+
     @model.on 'change:orientationDistance', (model,val,obj) =>
       @log 'direction-delta', Math.abs(val)
       @blinker.timeout = val if @blinker
