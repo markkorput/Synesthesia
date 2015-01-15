@@ -148,9 +148,13 @@
         }
       });
       this.model.on('change:blink', function(model, val, obj) {
-        return _this.blinker.enable(val);
+        if (_this.blinker) {
+          return _this.blinker.enable(val);
+        }
       });
       this.model.on('change:tempo', function(model, val, obj) {
+        console.log(val);
+        _this.orienterAudio || (_this.orienterAudio = _this.orienterAudio());
         return _this.orienterAudio.start(val);
       });
       this.model.on('change:orientationDistance', function(model, val, obj) {

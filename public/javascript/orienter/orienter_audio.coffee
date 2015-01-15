@@ -65,10 +65,10 @@ class @OrienterAudio
     #
 
     @stop()
-    return if trackidx == false # just stop
+    return if trckidx == false # just stop
 
     # no track specified; random mtrack
-    trckidx = parseInt(Math.random() * @bufferList.length) if trckidx == undefined
+    trckidx = 0 # parseInt(Math.random() * @bufferList.length) if trckidx == undefined
     buffer = @bufferList[trckidx]
 
     if !buffer

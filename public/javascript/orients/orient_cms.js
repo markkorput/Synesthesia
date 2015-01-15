@@ -175,9 +175,15 @@
     };
 
     OrientCmsItemView.prototype.initialize = function() {
+      var resetHtml;
       this.$el.append('<p id="orientation"></p>');
       this.$el.append('<p id="position"></p>');
-      this.$el.append('<p id="target"><span id="display">0</span><input type="range" value="0" min="0" max="360" /><a href="#" id="reset">reset</a></p>');
+      if (this.model.get('global') === true) {
+        resetHtml = '';
+      } else {
+        resetHtml = '<a href="#" id="reset">reset</a>';
+      }
+      this.$el.append('<p id="target"><span id="display">0</span><input type="range" value="0" min="0" max="360" />' + resetHtml + '</p>');
       this._appendBoolControl('visualize');
       this._appendBoolControl('blink');
       this._appendBoolControl('tempo');
@@ -265,6 +271,7 @@
     };
 
     OrientCmsItemView.prototype._onResetCustomTarget = function(evt) {
+      evt.preventDefault();
       this.model.set({
         customTargetOrientationValue: false
       });

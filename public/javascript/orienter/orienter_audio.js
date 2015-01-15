@@ -47,12 +47,10 @@
         return;
       }
       this.stop();
-      if (trackidx === false) {
+      if (trckidx === false) {
         return;
       }
-      if (trckidx === void 0) {
-        trckidx = parseInt(Math.random() * this.bufferList.length);
-      }
+      trckidx = 0;
       buffer = this.bufferList[trckidx];
       if (!buffer) {
         console.log('invalid buffer');

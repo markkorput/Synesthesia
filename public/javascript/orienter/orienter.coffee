@@ -100,9 +100,11 @@ class Orienter
         @loadVisualizer(false)
 
     @model.on 'change:blink', (model,val,obj) =>
-      @blinker.enable(val)
+      @blinker.enable(val) if @blinker
 
     @model.on 'change:tempo', (model,val,obj) =>
+      console.log val
+      @orienterAudio ||= @orienterAudio()
       @orienterAudio.start(val)
 
     @model.on 'change:orientationDistance', (model,val,obj) =>

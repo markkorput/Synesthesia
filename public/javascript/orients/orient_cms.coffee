@@ -107,7 +107,13 @@ class OrientCmsItemView extends Backbone.View
     initialize: ->
         @$el.append('<p id="orientation"></p>')
         @$el.append('<p id="position"></p>')
-        @$el.append('<p id="target"><span id="display">0</span><input type="range" value="0" min="0" max="360" /><a href="#" id="reset">reset</a></p>')
+
+        if @model.get('global') == true
+            resetHtml = ''
+        else
+            resetHtml = '<a href="#" id="reset">reset</a>'
+
+        @$el.append('<p id="target"><span id="display">0</span><input type="range" value="0" min="0" max="360" />'+resetHtml+'</p>')
 
         @_appendBoolControl('visualize')
         @_appendBoolControl('blink')
@@ -175,6 +181,7 @@ class OrientCmsItemView extends Backbone.View
         @model.set(targetOrientationValue: $(event.target).val())
 
     _onResetCustomTarget: (evt) ->
+        evt.preventDefault()
         @model.set(customTargetOrientationValue: false)
         @model.set(targetOrientationValue: @model.get('globalTargetOrientationValue'))
 
