@@ -124,6 +124,9 @@ class Orienter
       @orienterAudio ||= @orienterAudio()
       @orienterAudio.start(val)
 
+    @model.on 'change:radar', (model,val,obj) =>
+      @log 'radar', val
+
     @twoEl = document.getElementById('anim');
     @two = new Two(fullscreen: true).appendTo(@twoEl)
 

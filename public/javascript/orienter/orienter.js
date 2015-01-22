@@ -188,6 +188,9 @@
         _this.orienterAudio || (_this.orienterAudio = _this.orienterAudio());
         return _this.orienterAudio.start(val);
       });
+      this.model.on('change:radar', function(model, val, obj) {
+        return _this.log('radar', val);
+      });
       this.twoEl = document.getElementById('anim');
       this.two = new Two({
         fullscreen: true

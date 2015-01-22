@@ -42,7 +42,7 @@ class @OrientCms
                 tempo: globalModel.get('tempo')
                 gain: globalModel.get('gain')
 
-        _.each ['visualize', 'blink', 'tempo', 'gain'], (prop) =>
+        _.each ['visualize', 'blink', 'tempo', 'gain', 'radar'], (prop) =>
             # when global target control model's value changes, propagate this change to all client models
             globalModel.on 'change:'+prop, (model, val, obj) => @_pushGlobalBool(prop, val)
 
@@ -103,6 +103,7 @@ class OrientCmsItemView extends Backbone.View
         'change #blink select': '_onBoolControlChange'
         'change #tempo select': '_onBoolControlChange'
         'change #gain select': '_onBoolControlChange'
+        'change #radar select': '_onBoolControlChange'
 
     initialize: ->
         @$el.append('<p id="orientation"></p>')
@@ -119,6 +120,7 @@ class OrientCmsItemView extends Backbone.View
         @_appendBoolControl('blink')
         @_appendBoolControl('tempo')
         @_appendBoolControl('gain')
+        @_appendBoolControl('radar')
 
         @updateValues()
 
@@ -166,6 +168,7 @@ class OrientCmsItemView extends Backbone.View
         @_updateBoolControl('visualize')
         @_updateBoolControl('tempo')
         @_updateBoolControl('gain')
+        @_updateBoolControl('radar')
 
         if @model.get('highlighted') == true
             @$el.addClass 'highlighted'

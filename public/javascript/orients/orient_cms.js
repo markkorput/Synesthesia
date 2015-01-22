@@ -66,7 +66,7 @@
           gain: globalModel.get('gain')
         });
       });
-      _.each(['visualize', 'blink', 'tempo', 'gain'], function(prop) {
+      _.each(['visualize', 'blink', 'tempo', 'gain', 'radar'], function(prop) {
         globalModel.on('change:' + prop, function(model, val, obj) {
           return _this._pushGlobalBool(prop, val);
         });
@@ -168,7 +168,8 @@
       'change #visualize select': '_onBoolControlChange',
       'change #blink select': '_onBoolControlChange',
       'change #tempo select': '_onBoolControlChange',
-      'change #gain select': '_onBoolControlChange'
+      'change #gain select': '_onBoolControlChange',
+      'change #radar select': '_onBoolControlChange'
     };
 
     OrientCmsItemView.prototype.initialize = function() {
@@ -185,6 +186,7 @@
       this._appendBoolControl('blink');
       this._appendBoolControl('tempo');
       this._appendBoolControl('gain');
+      this._appendBoolControl('radar');
       this.updateValues();
       if (this.model) {
         return this.model.on('change', this.updateValues, this);
@@ -241,6 +243,7 @@
       this._updateBoolControl('visualize');
       this._updateBoolControl('tempo');
       this._updateBoolControl('gain');
+      this._updateBoolControl('radar');
       if (this.model.get('highlighted') === true) {
         return this.$el.addClass('highlighted');
       } else {
