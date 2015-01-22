@@ -31,6 +31,7 @@
       this.on('change:orientationValue', this._updateDistance);
       this.on('change:tempo', this._updateAudio);
       this.on('change:gain', this._updateAudio);
+      this.on('change:radar', this._updateAudio);
       this.set({
         lastOrientationTime: new Date().getTime()
       });
@@ -62,7 +63,7 @@
 
     OrientModel.prototype._updateAudio = function() {
       var audioEnabled;
-      audioEnabled = this.get('tempo') === true || this.get('gain') === true;
+      audioEnabled = this.get('tempo') === true || this.get('gain') === true || this.get('radar') === true;
       return this.set({
         audioEnabled: audioEnabled
       });

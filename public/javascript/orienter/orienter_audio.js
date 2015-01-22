@@ -41,6 +41,10 @@
       return this.setGain(val);
     };
 
+    OrienterAudio.prototype.applyRadar = function(val) {
+      return this._radarTempo = val;
+    };
+
     OrienterAudio.prototype.start = function(trckidx) {
       var buffer;
       if (!this.context) {
@@ -90,6 +94,15 @@
       this.gainMultiplier = Math.max(Math.min(g, 1.0), 0.0);
       if (this.gain) {
         return this.gain.gain.value = this.volume * this.gainMultiplier;
+      }
+    };
+
+    OrienterAudio.prototype.update = function(frameCount) {
+      var gain, sinpos;
+      if (this._radarTempo) {
+        sinpos = new Date().getTime() * (1 / this._radarTempo);
+        gain = Math.sin(sinpos) / 2 + 0.75;
+        return this.setGain(gain);
       }
     };
 

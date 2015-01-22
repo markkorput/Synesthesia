@@ -15,6 +15,7 @@ class @OrientModel extends Backbone.Model
 
     @on 'change:tempo', @_updateAudio
     @on 'change:gain', @_updateAudio
+    @on 'change:radar', @_updateAudio
 
     @set(lastOrientationTime: new Date().getTime())
 
@@ -32,5 +33,5 @@ class @OrientModel extends Backbone.Model
     @set(orientationDistance: dist)
 
   _updateAudio: =>
-    audioEnabled = @get('tempo') == true || @get('gain') == true
+    audioEnabled = @get('tempo') == true || @get('gain') == true || @get('radar') == true
     @set(audioEnabled: audioEnabled)

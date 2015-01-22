@@ -89,6 +89,11 @@ class Orienter
       @blinker.timeout = val if @blinker
       @orienterAudio.applyTempo(1.0 + val * 0.03) if @orienterAudio && @model.get('tempo') == true
       @orienterAudio.applyGain(1.0 - val / 180) if @orienterAudio && @model.get('gain') == true
+      @orienterAudio.applyRadar(val) if @orienterAudio && @model.get('radar') == true
+
+    @model.on 'change:audioEnabled', (model,val,obj) =>
+      @orienterAudio ||= @orienterAudio()
+      @orienterAudio.start(val)
 
     @model.on 'change:gain', (model, val, obj) =>
       if @orienterAudio
@@ -96,10 +101,6 @@ class Orienter
           @orienterAudio.applyGain(1.0 - model.get('orientationDistance') / 180)
         else
           @orienterAudio.applyGain(1.0)
-
-    @model.on 'change:audioEnabled', (model,val,obj) =>
-      @orienterAudio ||= @orienterAudio()
-      @orienterAudio.start(val)
 
     @model.on 'change:radar', (model,val,obj) =>
       @log 'radar', val
@@ -126,6 +127,7 @@ class Orienter
 
   update: (frameCount) =>
     @blinker.update(frameCount) if @blinker
+    @orienterAudio.update(frameCount) if @orienterAudio
 
   loadVisualizer: (_load) ->
     if _load == false

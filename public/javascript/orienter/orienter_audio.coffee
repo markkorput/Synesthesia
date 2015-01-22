@@ -56,6 +56,9 @@ class @OrienterAudio
   applyGain: (val) ->
     @setGain val
 
+  applyRadar: (val) ->
+    @_radarTempo = val
+
   start: (trckidx) ->
     return if !@context
 
@@ -100,3 +103,11 @@ class @OrienterAudio
   setGain: (g) ->
     @gainMultiplier = Math.max(Math.min(g, 1.0), 0.0)
     @gain.gain.value = @volume * @gainMultiplier if @gain
+
+  update: (frameCount) ->
+    if @_radarTempo
+      sinpos = new Date().getTime() * (1 / @_radarTempo)
+      gain = Math.sin(sinpos) / 2 + 0.75
+      @setGain(gain)
+
+

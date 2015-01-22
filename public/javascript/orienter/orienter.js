@@ -122,8 +122,15 @@
           _this.orienterAudio.applyTempo(1.0 + val * 0.03);
         }
         if (_this.orienterAudio && _this.model.get('gain') === true) {
-          return _this.orienterAudio.applyGain(1.0 - val / 180);
+          _this.orienterAudio.applyGain(1.0 - val / 180);
         }
+        if (_this.orienterAudio && _this.model.get('radar') === true) {
+          return _this.orienterAudio.applyRadar(val);
+        }
+      });
+      this.model.on('change:audioEnabled', function(model, val, obj) {
+        _this.orienterAudio || (_this.orienterAudio = _this.orienterAudio());
+        return _this.orienterAudio.start(val);
       });
       this.model.on('change:gain', function(model, val, obj) {
         if (_this.orienterAudio) {
@@ -133,10 +140,6 @@
             return _this.orienterAudio.applyGain(1.0);
           }
         }
-      });
-      this.model.on('change:audioEnabled', function(model, val, obj) {
-        _this.orienterAudio || (_this.orienterAudio = _this.orienterAudio());
-        return _this.orienterAudio.start(val);
       });
       this.model.on('change:radar', function(model, val, obj) {
         return _this.log('radar', val);
@@ -164,7 +167,10 @@
 
     Orienter.prototype.update = function(frameCount) {
       if (this.blinker) {
-        return this.blinker.update(frameCount);
+        this.blinker.update(frameCount);
+      }
+      if (this.orienterAudio) {
+        return this.orienterAudio.update(frameCount);
       }
     };
 
