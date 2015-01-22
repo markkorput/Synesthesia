@@ -148,6 +148,7 @@
     };
 
     OrientCmsItemView.prototype.initialize = function() {
+      this.$el.append('<p id="cid">' + this.model.cid + '</p>');
       this.$el.append('<p id="orientation"></p>');
       this.$el.append('<p id="position"></p>');
       this._appendRangeControl('target', 0, 360);

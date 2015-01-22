@@ -100,6 +100,7 @@ class OrientCmsItemView extends Backbone.View
         'change #radar select': '_onBoolControlChange'
 
     initialize: ->
+        @$el.append('<p id="cid">'+@model.cid+'</p>')
         @$el.append('<p id="orientation"></p>')
         @$el.append('<p id="position"></p>')
 
