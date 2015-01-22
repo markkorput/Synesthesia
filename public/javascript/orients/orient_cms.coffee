@@ -125,7 +125,7 @@ class OrientCmsItemView extends Backbone.View
         @_appendBoolControl('visualize')
         @_appendBoolControl('blink')
 
-        @_appendRangeControl('audio_track', 1, 2)
+        @_appendRangeControl('audio_track', 1, 3)
 
         @_appendBoolControl('tempo')
         @_appendBoolControl('gain')

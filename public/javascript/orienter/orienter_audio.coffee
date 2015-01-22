@@ -6,7 +6,7 @@ class @OrienterAudio
     #
 
     @options = opts || {}
-    @track_urls = ['audio/drone.wav', 'audio/125bpm-drums.wav'] # ['audio/125bpm-drums.wav', 'audio/125bpm-dj.wav', 'audio/125bpm-electro.wav', 'audio/harmonic-drone-repeat.wav']
+    @track_urls = ['audio/drone.wav', 'audio/125bpm-drums.wav', 'audio/techno.wav'] # ['audio/125bpm-drums.wav', 'audio/125bpm-dj.wav', 'audio/125bpm-electro.wav', 'audio/harmonic-drone-repeat.wav']
     @volume = 0.6
     @freq = 700 # Hz
     @gainMultiplier = 1.0

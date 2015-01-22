@@ -182,7 +182,7 @@
       this.$el.append('<p id="target"><span id="display">0</span><input type="range" value="0" min="0" max="360" />' + resetHtml + '</p>');
       this._appendBoolControl('visualize');
       this._appendBoolControl('blink');
-      this._appendRangeControl('audio_track', 1, 2);
+      this._appendRangeControl('audio_track', 1, 3);
       this._appendBoolControl('tempo');
       this._appendBoolControl('gain');
       this._appendBoolControl('radar');

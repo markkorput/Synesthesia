@@ -5,7 +5,7 @@
       var bufferLoader,
         _this = this;
       this.options = opts || {};
-      this.track_urls = ['audio/drone.wav', 'audio/125bpm-drums.wav'];
+      this.track_urls = ['audio/drone.wav', 'audio/125bpm-drums.wav', 'audio/techno.wav'];
       this.volume = 0.6;
       this.freq = 700;
       this.gainMultiplier = 1.0;
