@@ -145,7 +145,10 @@
         return _this.log('radar', val);
       });
       this.model.on('change:audio_track', function(model, val, obj) {
-        return _this.log('audio_track', val);
+        _this.log('audio_track', val);
+        if (_this.orienterAudio) {
+          return _this.orienterAudio.setTrack(val);
+        }
       });
       this.twoEl = document.getElementById('anim');
       this.two = new Two({

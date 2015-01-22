@@ -107,6 +107,7 @@ class Orienter
 
     @model.on 'change:audio_track', (model,val,obj) =>
       @log 'audio_track', val
+      @orienterAudio.setTrack(val) if @orienterAudio
 
     @twoEl = document.getElementById('anim');
     @two = new Two(fullscreen: true).appendTo(@twoEl)

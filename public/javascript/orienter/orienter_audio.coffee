@@ -6,7 +6,7 @@ class @OrienterAudio
     #
 
     @options = opts || {}
-    @track_urls = ['audio/drone.wav'] # ['audio/125bpm-drums.wav', 'audio/125bpm-dj.wav', 'audio/125bpm-electro.wav', 'audio/harmonic-drone-repeat.wav']
+    @track_urls = ['audio/drone.wav', 'audio/125bpm-drums.wav'] # ['audio/125bpm-drums.wav', 'audio/125bpm-dj.wav', 'audio/125bpm-electro.wav', 'audio/harmonic-drone-repeat.wav']
     @volume = 0.6
     @freq = 700 # Hz
     @gainMultiplier = 1.0
@@ -71,10 +71,11 @@ class @OrienterAudio
     #
 
     @stop()
+    console.log trckidx
     return if trckidx == false # just stop
 
     # no track specified; random mtrack
-    trckidx = 0 # parseInt(Math.random() * @bufferList.length) if trckidx == undefined
+    trckidx = @_trackIdx || 0 if trckidx == undefined || trckidx == true
     buffer = @bufferList[trckidx]
 
     if !buffer
@@ -110,4 +111,7 @@ class @OrienterAudio
       gain = Math.sin(sinpos) / 2 + 0.75
       @setGain(gain)
 
+  setTrack: (tracknumber) ->
+    @_trackIdx = tracknumber - 1
+    @start() if @isPlaying() # restart if playing
 

@@ -5,7 +5,7 @@
       var bufferLoader,
         _this = this;
       this.options = opts || {};
-      this.track_urls = ['audio/drone.wav'];
+      this.track_urls = ['audio/drone.wav', 'audio/125bpm-drums.wav'];
       this.volume = 0.6;
       this.freq = 700;
       this.gainMultiplier = 1.0;
@@ -55,10 +55,13 @@
         return;
       }
       this.stop();
+      console.log(trckidx);
       if (trckidx === false) {
         return;
       }
-      trckidx = 0;
+      if (trckidx === void 0 || trckidx === true) {
+        trckidx = this._trackIdx || 0;
+      }
       buffer = this.bufferList[trckidx];
       if (!buffer) {
         console.log('invalid buffer');
@@ -103,6 +106,13 @@
         sinpos = new Date().getTime() * (1 / this._radarTempo);
         gain = Math.sin(sinpos) / 2 + 0.75;
         return this.setGain(gain);
+      }
+    };
+
+    OrienterAudio.prototype.setTrack = function(tracknumber) {
+      this._trackIdx = tracknumber - 1;
+      if (this.isPlaying()) {
+        return this.start();
       }
     };
 
