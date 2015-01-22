@@ -105,6 +105,9 @@ class Orienter
     @model.on 'change:radar', (model,val,obj) =>
       @log 'radar', val
 
+    @model.on 'change:audio_track', (model,val,obj) =>
+      @log 'audio_track', val
+
     @twoEl = document.getElementById('anim');
     @two = new Two(fullscreen: true).appendTo(@twoEl)
 

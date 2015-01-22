@@ -8,6 +8,7 @@ class @OrientModel extends Backbone.Model
     targetOrientationValue: 0
     orientationValue: 0
     visualize: true
+    audio_track: 1
 
   initialize: ->
     @on 'change:targetOrientationValue', @_updateDistance
@@ -35,3 +36,5 @@ class @OrientModel extends Backbone.Model
   _updateAudio: =>
     audioEnabled = @get('tempo') == true || @get('gain') == true || @get('radar') == true
     @set(audioEnabled: audioEnabled)
+
+

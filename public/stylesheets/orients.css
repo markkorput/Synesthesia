@@ -93,7 +93,7 @@ p.small {
 .orient-cms-item-view p#tempo {
   width: 100px;
 }
-.orient-cms-item-view p#target input {
+.orient-cms-item-view input {
   display: block;
   width: 80px;
 }

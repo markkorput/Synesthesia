@@ -23,7 +23,8 @@
       radar: false,
       targetOrientationValue: 0,
       orientationValue: 0,
-      visualize: true
+      visualize: true,
+      audio_track: 1
     };
 
     OrientModel.prototype.initialize = function() {

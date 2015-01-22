@@ -42,7 +42,7 @@ class @OrientCms
                 tempo: globalModel.get('tempo')
                 gain: globalModel.get('gain')
 
-        _.each ['visualize', 'blink', 'tempo', 'gain', 'radar'], (prop) =>
+        _.each ['visualize', 'blink', 'tempo', 'gain', 'radar', 'audio_track'], (prop) =>
             # when global target control model's value changes, propagate this change to all client models
             globalModel.on 'change:'+prop, (model, val, obj) => @_pushGlobalBool(prop, val)
 
@@ -63,6 +63,8 @@ class @OrientCms
         @view.collection.each (clientModel) =>
             if clientModel.get(prop+'CustomValue') != true
                 clientModel.set(prop, val)
+
+
 
 class OrientCmsView extends Backbone.View
     tagName: 'ul'
@@ -99,6 +101,10 @@ class OrientCmsItemView extends Backbone.View
         'mousedown #target input': '_onCustomTarget'
         'mousemove #target input': '_onCustomTargetUpdate'
         'click #target #reset': '_onResetCustomTarget'
+        'mousedown #audio_track input': '_onCustomTrack'
+        'mousemove #audio_track input': '_onCustomTrackUpdate'
+        'click #audio_track #reset': '_onResetTrack'
+        
         'change #visualize select': '_onBoolControlChange'
         'change #blink select': '_onBoolControlChange'
         'change #tempo select': '_onBoolControlChange'
@@ -118,6 +124,9 @@ class OrientCmsItemView extends Backbone.View
 
         @_appendBoolControl('visualize')
         @_appendBoolControl('blink')
+
+        @_appendRangeControl('audio_track', 1, 2)
+
         @_appendBoolControl('tempo')
         @_appendBoolControl('gain')
         @_appendBoolControl('radar')
@@ -135,6 +144,14 @@ class OrientCmsItemView extends Backbone.View
 
         @$el.append('<p id="'+propName+'"><select>'+global_option+'<option value="1">On</option><option value="0">Off</option></select></p>')
 
+    _appendRangeControl: (propName, min, max) ->
+        if @model.get('global') == true
+            resetHtml = ''
+        else
+            resetHtml = '<a href="#" id="reset">reset</a>'
+
+        @$el.append('<p id="'+propName+'"><span id="display">0</span><input type="range" value="0" min="'+(min || 0)+'" max="'+(max || 100)+'" />'+resetHtml+'</p>')
+
     _updateBoolControl: (propName) ->
         lineEl = @$el.find('#'+propName)
 
@@ -142,14 +159,6 @@ class OrientCmsItemView extends Backbone.View
             lineEl.addClass('enabled').removeClass('disabled')
         else
             lineEl.addClass('disabled').removeClass('enabled')
-
-        resetEl = lineEl.find('#reset')
-
-        if @model.get('global') != true && resetEl.length > 0
-            if @model.get(propName+'CustomValue') == true
-                resetEl.show()
-            else
-                resetEl.hide()
 
         if inputEl = lineEl.find('select')
             useGlobal = (@model.get('global') != true && @model.get(propName+'CustomValue') != true)
@@ -159,6 +168,19 @@ class OrientCmsItemView extends Backbone.View
                 inputEl.val('1')
             else
                 inputEl.val('0')
+
+    _updateRangeControl: (propName) ->
+        val = @model.get(propName) || 0
+        @$el.find('p#'+propName+' #display').text val
+        @$el.find('p#'+propName+' input').val val
+
+        lineEl = @$el.find('#'+propName)
+        resetEl = lineEl.find('#reset')
+
+        if @model.get('global') != true && @model.get(propName+'CustomValue') == true
+            resetEl.show()
+        else
+            resetEl.hide()
 
     updateValues: ->
         return if !@model
@@ -172,6 +194,8 @@ class OrientCmsItemView extends Backbone.View
         targetVal = @model.get('targetOrientationValue') || 0
         @$el.find('p#target #display').text targetVal
         @$el.find('p#target input').val targetVal
+
+        @_updateRangeControl('audio_track')
 
         @_updateBoolControl('blink')
         @_updateBoolControl('visualize')
@@ -187,6 +211,7 @@ class OrientCmsItemView extends Backbone.View
     _onHover: (evt) ->
         @model.set(highlighted: true)
 
+
     _onCustomTarget: (evt) ->
         @model.set(customTargetOrientationValue: true)
 
@@ -199,6 +224,17 @@ class OrientCmsItemView extends Backbone.View
         @model.set(customTargetOrientationValue: false)
         @model.set(targetOrientationValue: @model.get('globalTargetOrientationValue'))
 
+    _onCustomTrack: (evt) ->
+        @model.set(audio_trackCustomValue: true) if @model.get('global') != true
+
+    _onCustomTrackUpdate: (evt) ->
+        return if @model.get('audio_trackCustomValue') != true && @model.get('global') != true
+        @model.set(audio_track: $(event.target).val())
+
+    _onResetTrack: (evt) ->
+        evt.preventDefault()
+        @model.set(audio_trackCustomValue: false)
+
     _onBoolControlChange: (evt) ->
         el = $(evt.target)
         id = el.parent().prop('id')
@@ -206,3 +242,4 @@ class OrientCmsItemView extends Backbone.View
         @model.set(id+'CustomValue', val != 'global')
         if val != 'global'
             @model.set(id, val == '1')
+

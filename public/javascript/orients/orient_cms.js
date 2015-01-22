@@ -61,7 +61,7 @@
           gain: globalModel.get('gain')
         });
       });
-      _.each(['visualize', 'blink', 'tempo', 'gain', 'radar'], function(prop) {
+      _.each(['visualize', 'blink', 'tempo', 'gain', 'radar', 'audio_track'], function(prop) {
         globalModel.on('change:' + prop, function(model, val, obj) {
           return _this._pushGlobalBool(prop, val);
         });
@@ -160,6 +160,9 @@
       'mousedown #target input': '_onCustomTarget',
       'mousemove #target input': '_onCustomTargetUpdate',
       'click #target #reset': '_onResetCustomTarget',
+      'mousedown #audio_track input': '_onCustomTrack',
+      'mousemove #audio_track input': '_onCustomTrackUpdate',
+      'click #audio_track #reset': '_onResetTrack',
       'change #visualize select': '_onBoolControlChange',
       'change #blink select': '_onBoolControlChange',
       'change #tempo select': '_onBoolControlChange',
@@ -179,6 +182,7 @@
       this.$el.append('<p id="target"><span id="display">0</span><input type="range" value="0" min="0" max="360" />' + resetHtml + '</p>');
       this._appendBoolControl('visualize');
       this._appendBoolControl('blink');
+      this._appendRangeControl('audio_track', 1, 2);
       this._appendBoolControl('tempo');
       this._appendBoolControl('gain');
       this._appendBoolControl('radar');
@@ -198,21 +202,23 @@
       return this.$el.append('<p id="' + propName + '"><select>' + global_option + '<option value="1">On</option><option value="0">Off</option></select></p>');
     };
 
+    OrientCmsItemView.prototype._appendRangeControl = function(propName, min, max) {
+      var resetHtml;
+      if (this.model.get('global') === true) {
+        resetHtml = '';
+      } else {
+        resetHtml = '<a href="#" id="reset">reset</a>';
+      }
+      return this.$el.append('<p id="' + propName + '"><span id="display">0</span><input type="range" value="0" min="' + (min || 0) + '" max="' + (max || 100) + '" />' + resetHtml + '</p>');
+    };
+
     OrientCmsItemView.prototype._updateBoolControl = function(propName) {
-      var inputEl, lineEl, resetEl, useGlobal;
+      var inputEl, lineEl, useGlobal;
       lineEl = this.$el.find('#' + propName);
       if (this.model.get(propName) === true) {
         lineEl.addClass('enabled').removeClass('disabled');
       } else {
         lineEl.addClass('disabled').removeClass('enabled');
-      }
-      resetEl = lineEl.find('#reset');
-      if (this.model.get('global') !== true && resetEl.length > 0) {
-        if (this.model.get(propName + 'CustomValue') === true) {
-          resetEl.show();
-        } else {
-          resetEl.hide();
-        }
       }
       if (inputEl = lineEl.find('select')) {
         useGlobal = this.model.get('global') !== true && this.model.get(propName + 'CustomValue') !== true;
@@ -223,6 +229,20 @@
         } else {
           return inputEl.val('0');
         }
+      }
+    };
+
+    OrientCmsItemView.prototype._updateRangeControl = function(propName) {
+      var lineEl, resetEl, val;
+      val = this.model.get(propName) || 0;
+      this.$el.find('p#' + propName + ' #display').text(val);
+      this.$el.find('p#' + propName + ' input').val(val);
+      lineEl = this.$el.find('#' + propName);
+      resetEl = lineEl.find('#reset');
+      if (this.model.get('global') !== true && this.model.get(propName + 'CustomValue') === true) {
+        return resetEl.show();
+      } else {
+        return resetEl.hide();
       }
     };
 
@@ -244,6 +264,7 @@
       targetVal = this.model.get('targetOrientationValue') || 0;
       this.$el.find('p#target #display').text(targetVal);
       this.$el.find('p#target input').val(targetVal);
+      this._updateRangeControl('audio_track');
       this._updateBoolControl('blink');
       this._updateBoolControl('visualize');
       this._updateBoolControl('tempo');
@@ -284,6 +305,30 @@
       });
       return this.model.set({
         targetOrientationValue: this.model.get('globalTargetOrientationValue')
+      });
+    };
+
+    OrientCmsItemView.prototype._onCustomTrack = function(evt) {
+      if (this.model.get('global') !== true) {
+        return this.model.set({
+          audio_trackCustomValue: true
+        });
+      }
+    };
+
+    OrientCmsItemView.prototype._onCustomTrackUpdate = function(evt) {
+      if (this.model.get('audio_trackCustomValue') !== true && this.model.get('global') !== true) {
+        return;
+      }
+      return this.model.set({
+        audio_track: $(event.target).val()
+      });
+    };
+
+    OrientCmsItemView.prototype._onResetTrack = function(evt) {
+      evt.preventDefault();
+      return this.model.set({
+        audio_trackCustomValue: false
       });
     };
 
