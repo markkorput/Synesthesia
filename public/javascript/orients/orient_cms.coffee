@@ -22,27 +22,17 @@ class @OrientCms
                 @each (m) ->
                     m.set(highlighted: false) if m.cid != model.cid
 
-        # when global target control model's value changes, propagate this change to all client models
-        globalModel.on 'change:targetOrientationValue', (model, val, obj) =>
-            @view.collection.each (clientModel) =>
-                clientModel.set(globalTargetOrientationValue: val)
-
-        # each client gets the 'globalTargetOrientationValue', but only for the ones that don't have a custom target value,
-        # this global value will be applied as actual target value
-        @view.collection.on 'change:globalTargetOrientationValue', (model, val, obj) ->
-            return if model.get('customTargetOrientationValue') == true # skip clients who have a custom setting
-            model.set(targetOrientationValue: val)
 
         # create visual elements for every new connecting client
         @view.collection.on 'add', (model) =>
-            model.set(targetOrientationValue: globalModel.get('orientationValue'))
             model.set
+                target: globalModel.get('target')
                 blink: globalModel.get('blink')
                 visualize: globalModel.get('visualize')
                 tempo: globalModel.get('tempo')
                 gain: globalModel.get('gain')
 
-        _.each ['visualize', 'blink', 'tempo', 'gain', 'radar', 'audio_track'], (prop) =>
+        _.each ['target', 'visualize', 'blink', 'tempo', 'gain', 'radar', 'audio_track'], (prop) =>
             # when global target control model's value changes, propagate this change to all client models
             globalModel.on 'change:'+prop, (model, val, obj) => @_pushGlobalBool(prop, val)
 
@@ -54,10 +44,6 @@ class @OrientCms
                 data = sessionId: model.id
                 data[prop] = val
                 @server.emit 'orient-config', data
-
-        # when a client's (actual) target value changes, emit a message to notify the client
-        @view.collection.on 'change:targetOrientationValue', (model, value, obj) =>
-            @server.emit('orient-config', sessionId: model.id, targetOrientationValue: value)
 
     _pushGlobalBool: (prop, val) =>
         @view.collection.each (clientModel) =>
@@ -98,9 +84,11 @@ class OrientCmsItemView extends Backbone.View
 
     events:
         'mouseover': '_onHover'
+
         'mousedown #target input': '_onCustomTarget'
         'mousemove #target input': '_onCustomTargetUpdate'
         'click #target #reset': '_onResetCustomTarget'
+
         'mousedown #audio_track input': '_onCustomTrack'
         'mousemove #audio_track input': '_onCustomTrackUpdate'
         'click #audio_track #reset': '_onResetTrack'
@@ -115,12 +103,7 @@ class OrientCmsItemView extends Backbone.View
         @$el.append('<p id="orientation"></p>')
         @$el.append('<p id="position"></p>')
 
-        if @model.get('global') == true
-            resetHtml = ''
-        else
-            resetHtml = '<a href="#" id="reset">reset</a>'
-
-        @$el.append('<p id="target"><span id="display">0</span><input type="range" value="0" min="0" max="360" />'+resetHtml+'</p>')
+        @_appendRangeControl('target', 0, 360)
 
         @_appendBoolControl('visualize')
         @_appendBoolControl('blink')
@@ -195,6 +178,7 @@ class OrientCmsItemView extends Backbone.View
         @$el.find('p#target #display').text targetVal
         @$el.find('p#target input').val targetVal
 
+        @_updateRangeControl('target')
         @_updateRangeControl('audio_track')
 
         @_updateBoolControl('blink')
@@ -213,16 +197,15 @@ class OrientCmsItemView extends Backbone.View
 
 
     _onCustomTarget: (evt) ->
-        @model.set(customTargetOrientationValue: true)
+        @model.set(targetCustomValue: true) if @model.get('global') != true
 
     _onCustomTargetUpdate: (evt) ->
-        return if @model.get('customTargetOrientationValue') != true
-        @model.set(targetOrientationValue: $(event.target).val())
+        return if @model.get('targetCustomValue') != true && @model.get('global') != true
+        @model.set(target: $(event.target).val())
 
     _onResetCustomTarget: (evt) ->
         evt.preventDefault()
-        @model.set(customTargetOrientationValue: false)
-        @model.set(targetOrientationValue: @model.get('globalTargetOrientationValue'))
+        @model.set(targetCustomValue: false)
 
     _onCustomTrack: (evt) ->
         @model.set(audio_trackCustomValue: true) if @model.get('global') != true

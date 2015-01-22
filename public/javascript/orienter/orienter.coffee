@@ -42,7 +42,7 @@ class Orienter
 
     @server = io.connect '/orienter'
 
-    @model = new OrientModel(targetOrientationValue: 0, blink: false, visualize: true)
+    @model = new OrientModel()
 
     @server.on 'sessionId', (data) =>
       @sessionId = data
@@ -67,7 +67,7 @@ class Orienter
       return if data.sessionId != @sessionId # not for us
       @model.set(data)
   
-    @model.on 'change:targetOrientationValue', (model, val, obj) =>
+    @model.on 'change:target', (model, val, obj) =>
       @log 'target-direction', val
       @_updateVisualizerRotation()
 
@@ -155,7 +155,7 @@ class Orienter
 
   _updateVisualizerRotation: ->
     return if !@rotator || !@model
-    @rotator.rotation = ((@model.get('orientationValue') || 0) - (@model.get('targetOrientationValue') || 0)) / 180 * Math.PI
+    @rotator.rotation = ((@model.get('orientationValue') || 0) - (@model.get('target') || 0)) / 180 * Math.PI
 
 
   setupTracking: (_setup) ->

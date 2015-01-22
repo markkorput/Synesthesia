@@ -21,7 +21,7 @@
       gain: false,
       blink: false,
       radar: false,
-      targetOrientationValue: 0,
+      target: 0,
       orientationValue: 0,
       visualize: true,
       audio_track: 1

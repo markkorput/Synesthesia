@@ -61,11 +61,7 @@
       var _this = this;
       this.options = opts || {};
       this.server = io.connect('/orienter');
-      this.model = new OrientModel({
-        targetOrientationValue: 0,
-        blink: false,
-        visualize: true
-      });
+      this.model = new OrientModel();
       this.server.on('sessionId', function(data) {
         _this.sessionId = data;
         return _this.log('SessionID', data);
@@ -93,7 +89,7 @@
         }
         return _this.model.set(data);
       });
-      this.model.on('change:targetOrientationValue', function(model, val, obj) {
+      this.model.on('change:target', function(model, val, obj) {
         _this.log('target-direction', val);
         return _this._updateVisualizerRotation();
       });
@@ -205,7 +201,7 @@
       if (!this.rotator || !this.model) {
         return;
       }
-      return this.rotator.rotation = ((this.model.get('orientationValue') || 0) - (this.model.get('targetOrientationValue') || 0)) / 180 * Math.PI;
+      return this.rotator.rotation = ((this.model.get('orientationValue') || 0) - (this.model.get('target') || 0)) / 180 * Math.PI;
     };
 
     Orienter.prototype.setupTracking = function(_setup) {

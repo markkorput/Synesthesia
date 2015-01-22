@@ -35,33 +35,16 @@
           });
         }
       });
-      globalModel.on('change:targetOrientationValue', function(model, val, obj) {
-        return _this.view.collection.each(function(clientModel) {
-          return clientModel.set({
-            globalTargetOrientationValue: val
-          });
-        });
-      });
-      this.view.collection.on('change:globalTargetOrientationValue', function(model, val, obj) {
-        if (model.get('customTargetOrientationValue') === true) {
-          return;
-        }
-        return model.set({
-          targetOrientationValue: val
-        });
-      });
       this.view.collection.on('add', function(model) {
-        model.set({
-          targetOrientationValue: globalModel.get('orientationValue')
-        });
         return model.set({
+          target: globalModel.get('target'),
           blink: globalModel.get('blink'),
           visualize: globalModel.get('visualize'),
           tempo: globalModel.get('tempo'),
           gain: globalModel.get('gain')
         });
       });
-      _.each(['visualize', 'blink', 'tempo', 'gain', 'radar', 'audio_track'], function(prop) {
+      _.each(['target', 'visualize', 'blink', 'tempo', 'gain', 'radar', 'audio_track'], function(prop) {
         globalModel.on('change:' + prop, function(model, val, obj) {
           return _this._pushGlobalBool(prop, val);
         });
@@ -77,12 +60,6 @@
           };
           data[prop] = val;
           return _this.server.emit('orient-config', data);
-        });
-      });
-      this.view.collection.on('change:targetOrientationValue', function(model, value, obj) {
-        return _this.server.emit('orient-config', {
-          sessionId: model.id,
-          targetOrientationValue: value
         });
       });
     }
@@ -171,15 +148,9 @@
     };
 
     OrientCmsItemView.prototype.initialize = function() {
-      var resetHtml;
       this.$el.append('<p id="orientation"></p>');
       this.$el.append('<p id="position"></p>');
-      if (this.model.get('global') === true) {
-        resetHtml = '';
-      } else {
-        resetHtml = '<a href="#" id="reset">reset</a>';
-      }
-      this.$el.append('<p id="target"><span id="display">0</span><input type="range" value="0" min="0" max="360" />' + resetHtml + '</p>');
+      this._appendRangeControl('target', 0, 360);
       this._appendBoolControl('visualize');
       this._appendBoolControl('blink');
       this._appendRangeControl('audio_track', 1, 3);
@@ -264,6 +235,7 @@
       targetVal = this.model.get('targetOrientationValue') || 0;
       this.$el.find('p#target #display').text(targetVal);
       this.$el.find('p#target input').val(targetVal);
+      this._updateRangeControl('target');
       this._updateRangeControl('audio_track');
       this._updateBoolControl('blink');
       this._updateBoolControl('visualize');
@@ -284,27 +256,26 @@
     };
 
     OrientCmsItemView.prototype._onCustomTarget = function(evt) {
-      return this.model.set({
-        customTargetOrientationValue: true
-      });
+      if (this.model.get('global') !== true) {
+        return this.model.set({
+          targetCustomValue: true
+        });
+      }
     };
 
     OrientCmsItemView.prototype._onCustomTargetUpdate = function(evt) {
-      if (this.model.get('customTargetOrientationValue') !== true) {
+      if (this.model.get('targetCustomValue') !== true && this.model.get('global') !== true) {
         return;
       }
       return this.model.set({
-        targetOrientationValue: $(event.target).val()
+        target: $(event.target).val()
       });
     };
 
     OrientCmsItemView.prototype._onResetCustomTarget = function(evt) {
       evt.preventDefault();
-      this.model.set({
-        customTargetOrientationValue: false
-      });
       return this.model.set({
-        targetOrientationValue: this.model.get('globalTargetOrientationValue')
+        targetCustomValue: false
       });
     };
 
