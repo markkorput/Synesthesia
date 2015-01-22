@@ -1,14 +1,6 @@
 $(document).ready ->
   window.orients = new Orients()
 
-
-class OrientModel extends Backbone.Model
-    initialize: ->
-        @set(lastOrientationTime: new Date().getTime())
-        @on 'change:orientation', (model, val, obj) ->
-            model.set(lastOrientationTime: new Date().getTime())
-
-
 class OrientCollection extends Backbone.Collection
     model: OrientModel
 

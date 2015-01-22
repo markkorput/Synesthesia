@@ -12,12 +12,7 @@
         _this = this;
       this.options = opts || {};
       this.server = opts.server;
-      globalModel = new Backbone.Model({
-        orientationValue: 0,
-        visualize: true,
-        blink: false,
-        tempo: false,
-        gain: false,
+      globalModel = new OrientModel({
         global: true
       });
       this.view = new OrientCmsView({
@@ -204,7 +199,7 @@
     };
 
     OrientCmsItemView.prototype._updateBoolControl = function(propName) {
-      var lineEl, resetEl;
+      var inputEl, lineEl, resetEl, useGlobal;
       lineEl = this.$el.find('#' + propName);
       if (this.model.get(propName) === true) {
         lineEl.addClass('enabled').removeClass('disabled');
@@ -214,9 +209,19 @@
       resetEl = lineEl.find('#reset');
       if (this.model.get('global') !== true && resetEl.length > 0) {
         if (this.model.get(propName + 'CustomValue') === true) {
-          return resetEl.show();
+          resetEl.show();
         } else {
-          return resetEl.hide();
+          resetEl.hide();
+        }
+      }
+      if (inputEl = lineEl.find('select')) {
+        useGlobal = this.model.get('global') !== true && this.model.get(propName + 'CustomValue') !== true;
+        if (useGlobal) {
+          return inputEl.val('global');
+        } else if (this.model.get(propName) === true) {
+          return inputEl.val('1');
+        } else {
+          return inputEl.val('0');
         }
       }
     };

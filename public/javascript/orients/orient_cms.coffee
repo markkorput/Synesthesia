@@ -4,7 +4,7 @@ class @OrientCms
 
         @server = opts.server
 
-        globalModel = new Backbone.Model(orientationValue: 0, visualize: true, blink: false, tempo: false, gain: false, global: true)
+        globalModel = new OrientModel(global: true)
         
         @view = new OrientCmsView(collection: opts.clients)
         document.body.appendChild( @view.el );
@@ -150,6 +150,15 @@ class OrientCmsItemView extends Backbone.View
                 resetEl.show()
             else
                 resetEl.hide()
+
+        if inputEl = lineEl.find('select')
+            useGlobal = (@model.get('global') != true && @model.get(propName+'CustomValue') != true)
+            if useGlobal
+                inputEl.val('global')
+            else if @model.get(propName) == true
+                inputEl.val('1')
+            else
+                inputEl.val('0')
 
     updateValues: ->
         return if !@model
