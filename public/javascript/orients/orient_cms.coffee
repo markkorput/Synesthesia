@@ -32,7 +32,34 @@ class @OrientCms
                 tempo: globalModel.get('tempo')
                 gain: globalModel.get('gain')
 
-        _.each ['target', 'visualize', 'blink', 'tempo', 'gain', 'radar', 'audio_track'], (prop) =>
+            model.on 'change:targetLeaderCid', (model, val, obj) =>
+                # remove previous listener
+                
+                # find leader
+                leader = @view.collection.get(val) # get the model with the specified cid
+                leader ||= @globalItemView.model if @globalItemView.model.cid == val
+
+                # abort if not found (maybe val == undefined?)
+                if leader == undefined
+                    console.log "Couldn't find target leader model using cid: " + val
+                    return
+
+                # bind listener
+                leader.on 'change:target', (m, v, o) =>
+                    model.set(target: v)
+
+            # by default every new connected client binds to the global model's target
+            model.set targetLeaderCid: @globalItemView.model.cid
+
+
+        # every time a client model's target property changes, make sure we notify them
+        @view.collection.on 'change:target', (model, val, obj) =>
+            @server.emit 'orient-config', sessionId: model.id, target: val
+
+
+        # automate the control and notification for these properties
+        _.each ['visualize', 'blink', 'tempo', 'gain', 'radar', 'audio_track'], (prop) =>
+
             # when global target control model's value changes, propagate this change to all client models
             globalModel.on 'change:'+prop, (model, val, obj) => @_pushGlobalBool(prop, val)
 
@@ -45,11 +72,12 @@ class @OrientCms
                 data[prop] = val
                 @server.emit 'orient-config', data
 
+
+
     _pushGlobalBool: (prop, val) =>
         @view.collection.each (clientModel) =>
             if clientModel.get(prop+'CustomValue') != true
                 clientModel.set(prop, val)
-
 
 
 class OrientCmsView extends Backbone.View
@@ -104,6 +132,7 @@ class OrientCmsItemView extends Backbone.View
         @$el.append('<p id="orientation"></p>')
         @$el.append('<p id="position"></p>')
 
+        @_appendStringControl('target_source')
         @_appendRangeControl('target', 0, 360)
 
         @_appendBoolControl('visualize')
@@ -136,6 +165,15 @@ class OrientCmsItemView extends Backbone.View
 
         @$el.append('<p id="'+propName+'"><span id="display">0</span><input type="range" value="0" min="'+(min || 0)+'" max="'+(max || 100)+'" />'+resetHtml+'</p>')
 
+    _appendStringControl: (propName) ->
+        if @model.get('global') == true
+            resetHtml = ''
+        else
+            resetHtml = '<a href="#" id="reset">reset</a>'
+
+        @$el.append('<p id="'+propName+'"><input type="text" />'+resetHtml+'</p>')
+
+
     _updateBoolControl: (propName) ->
         lineEl = @$el.find('#'+propName)
 
@@ -166,6 +204,15 @@ class OrientCmsItemView extends Backbone.View
         else
             resetEl.hide()
 
+    _updateStringControl: (propName) ->
+        @$el.find('p#'+propName+' input').val @model.get(propName)
+
+        resetEl = $('p#'+propName+' #reset')
+        if @model.get('global') != true && @model.get(propName+'CustomValue') == true
+            resetEl.show()
+        else
+            resetEl.hide()
+
     updateValues: ->
         return if !@model
 
@@ -187,6 +234,8 @@ class OrientCmsItemView extends Backbone.View
         @_updateBoolControl('tempo')
         @_updateBoolControl('gain')
         @_updateBoolControl('radar')
+
+        @_updateStringControl('target_source')
 
         if @model.get('highlighted') == true
             @$el.addClass 'highlighted'
@@ -227,3 +276,7 @@ class OrientCmsItemView extends Backbone.View
         if val != 'global'
             @model.set(id, val == '1')
 
+    _onStringControlChange: (evt) ->
+        el = $(evt.target)
+        id = el.parent().prop('id')
+        val = el.val()

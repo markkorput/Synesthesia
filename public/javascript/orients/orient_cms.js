@@ -36,15 +36,40 @@
         }
       });
       this.view.collection.on('add', function(model) {
-        return model.set({
+        model.set({
           target: globalModel.get('target'),
           blink: globalModel.get('blink'),
           visualize: globalModel.get('visualize'),
           tempo: globalModel.get('tempo'),
           gain: globalModel.get('gain')
         });
+        model.on('change:targetLeaderCid', function(model, val, obj) {
+          var leader;
+          leader = _this.view.collection.get(val);
+          if (_this.globalItemView.model.cid === val) {
+            leader || (leader = _this.globalItemView.model);
+          }
+          if (leader === void 0) {
+            console.log("Couldn't find target leader model using cid: " + val);
+            return;
+          }
+          return leader.on('change:target', function(m, v, o) {
+            return model.set({
+              target: v
+            });
+          });
+        });
+        return model.set({
+          targetLeaderCid: _this.globalItemView.model.cid
+        });
       });
-      _.each(['target', 'visualize', 'blink', 'tempo', 'gain', 'radar', 'audio_track'], function(prop) {
+      this.view.collection.on('change:target', function(model, val, obj) {
+        return _this.server.emit('orient-config', {
+          sessionId: model.id,
+          target: val
+        });
+      });
+      _.each(['visualize', 'blink', 'tempo', 'gain', 'radar', 'audio_track'], function(prop) {
         globalModel.on('change:' + prop, function(model, val, obj) {
           return _this._pushGlobalBool(prop, val);
         });
@@ -151,6 +176,7 @@
       this.$el.append('<p id="cid">' + this.model.cid + '</p>');
       this.$el.append('<p id="orientation"></p>');
       this.$el.append('<p id="position"></p>');
+      this._appendStringControl('target_source');
       this._appendRangeControl('target', 0, 360);
       this._appendBoolControl('visualize');
       this._appendBoolControl('blink');
@@ -182,6 +208,16 @@
         resetHtml = '<a href="#" id="reset">reset</a>';
       }
       return this.$el.append('<p id="' + propName + '"><span id="display">0</span><input type="range" value="0" min="' + (min || 0) + '" max="' + (max || 100) + '" />' + resetHtml + '</p>');
+    };
+
+    OrientCmsItemView.prototype._appendStringControl = function(propName) {
+      var resetHtml;
+      if (this.model.get('global') === true) {
+        resetHtml = '';
+      } else {
+        resetHtml = '<a href="#" id="reset">reset</a>';
+      }
+      return this.$el.append('<p id="' + propName + '"><input type="text" />' + resetHtml + '</p>');
     };
 
     OrientCmsItemView.prototype._updateBoolControl = function(propName) {
@@ -218,6 +254,17 @@
       }
     };
 
+    OrientCmsItemView.prototype._updateStringControl = function(propName) {
+      var resetEl;
+      this.$el.find('p#' + propName + ' input').val(this.model.get(propName));
+      resetEl = $('p#' + propName + ' #reset');
+      if (this.model.get('global') !== true && this.model.get(propName + 'CustomValue') === true) {
+        return resetEl.show();
+      } else {
+        return resetEl.hide();
+      }
+    };
+
     OrientCmsItemView.prototype.updateValues = function() {
       var targetVal, val;
       if (!this.model) {
@@ -243,6 +290,7 @@
       this._updateBoolControl('tempo');
       this._updateBoolControl('gain');
       this._updateBoolControl('radar');
+      this._updateStringControl('target_source');
       if (this.model.get('highlighted') === true) {
         return this.$el.addClass('highlighted');
       } else {
@@ -313,6 +361,13 @@
       if (val !== 'global') {
         return this.model.set(id, val === '1');
       }
+    };
+
+    OrientCmsItemView.prototype._onStringControlChange = function(evt) {
+      var el, id, val;
+      el = $(evt.target);
+      id = el.parent().prop('id');
+      return val = el.val();
     };
 
     return OrientCmsItemView;
