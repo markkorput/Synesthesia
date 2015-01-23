@@ -26,7 +26,6 @@ class @OrientCms
         @view.collection.on 'change:target_source', (model, val, obj) =>
             target = false
             if val.indexOf('target-') == 0
-                console.log 'yea'
                 v = val.replace('target-', '')
                 target = true
             else

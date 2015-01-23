@@ -7,9 +7,10 @@ class OrientCollection extends Backbone.Collection
     initialize: ->
         # auto-remove clients that haven't send an orientation update for 3 seconds
         @on 'change:orientation', (model, val, obj) =>
+            # TODO; don't perform this check on EVERY INCOMING ORIENTATION (which is more than constantly)
             time = new Date().getTime()
             @each (m) =>
-                if time - (m.get('lastOrientationTime') || time) > 3000 # 3 seconds
+                if time - (m.get('lastOrientationTime') || time) > 10000 # 3 seconds
                     @remove m
 
 class Orients

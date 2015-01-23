@@ -39,7 +39,6 @@
         var leader, target, v;
         target = false;
         if (val.indexOf('target-') === 0) {
-          console.log('yea');
           v = val.replace('target-', '');
           target = true;
         } else {

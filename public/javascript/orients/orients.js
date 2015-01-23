@@ -24,7 +24,7 @@
         var time;
         time = new Date().getTime();
         return _this.each(function(m) {
-          if (time - (m.get('lastOrientationTime') || time) > 3000) {
+          if (time - (m.get('lastOrientationTime') || time) > 10000) {
             return _this.remove(m);
           }
         });
