@@ -34,7 +34,10 @@ class @OrientCms
 
             model.on 'change:targetLeaderCid', (model, val, obj) =>
                 # remove previous listener
-                
+                if model.targetLeader
+                    model.targetLeader.off 'change:target', model.onTargetLeaderTargetChange
+                    model.targetLeader = undefined
+
                 # find leader
                 leader = @view.collection.get(val) # get the model with the specified cid
                 leader ||= @globalItemView.model if @globalItemView.model.cid == val
@@ -45,8 +48,10 @@ class @OrientCms
                     return
 
                 # bind listener
-                leader.on 'change:target', (m, v, o) =>
-                    model.set(target: v)
+                leader.on 'change:target', model.onTargetLeaderTargetChange
+                model.targetLeader = leader
+                model.set(target: leader.get('target'))
+
 
             # by default every new connected client binds to the global model's target
             model.set targetLeaderCid: @globalItemView.model.cid
@@ -56,6 +61,13 @@ class @OrientCms
         @view.collection.on 'change:target', (model, val, obj) =>
             @server.emit 'orient-config', sessionId: model.id, target: val
 
+        @view.collection.on 'change:target_source', (model, val, obj) =>
+            # find leader
+            leader = @view.collection.get(val) # get the model with the specified cid
+            leader ||= @globalItemView.model if @globalItemView.model.cid == val
+            # only set the actual effective targetLeaderCid property if the current target_source value specifies a valid model
+            if leader
+                model.set targetLeaderCid: val
 
         # automate the control and notification for these properties
         _.each ['visualize', 'blink', 'tempo', 'gain', 'radar', 'audio_track'], (prop) =>
@@ -127,13 +139,15 @@ class OrientCmsItemView extends Backbone.View
         'change #gain select': '_onBoolControlChange'
         'change #radar select': '_onBoolControlChange'
 
+        'keyup #target_source': '_onStringControlChange'
+
     initialize: ->
         @$el.append('<p id="cid">'+@model.cid+'</p>')
         @$el.append('<p id="orientation"></p>')
         @$el.append('<p id="position"></p>')
 
         @_appendStringControl('target_source')
-        @_appendRangeControl('target', 0, 360)
+        @_appendRangeControl('target', 0, 360, {reset: false})
 
         @_appendBoolControl('visualize')
         @_appendBoolControl('blink')
@@ -157,8 +171,10 @@ class OrientCmsItemView extends Backbone.View
 
         @$el.append('<p id="'+propName+'"><select>'+global_option+'<option value="1">On</option><option value="0">Off</option></select></p>')
 
-    _appendRangeControl: (propName, min, max) ->
-        if @model.get('global') == true
+    _appendRangeControl: (propName, min, max, opts) ->
+        opts ||= {}
+
+        if @model.get('global') == true || opts.reset == false
             resetHtml = ''
         else
             resetHtml = '<a href="#" id="reset">reset</a>'
@@ -235,7 +251,7 @@ class OrientCmsItemView extends Backbone.View
         @_updateBoolControl('gain')
         @_updateBoolControl('radar')
 
-        @_updateStringControl('target_source')
+        # @_updateStringControl('target_source')
 
         if @model.get('highlighted') == true
             @$el.addClass 'highlighted'
@@ -247,10 +263,11 @@ class OrientCmsItemView extends Backbone.View
 
 
     _onCustomTarget: (evt) ->
-        @model.set(targetCustomValue: true) if @model.get('global') != true
+        @model.set(target_source: @model.cid) # @model.set(targetCustomValue: true) if @model.get('global') != true
+        @_updateStringControl('target_source')
 
     _onCustomTargetUpdate: (evt) ->
-        return if @model.get('targetCustomValue') != true && @model.get('global') != true
+        return if @model.get('target_source') != @model.cid && @model.get('global') != true
         @model.set(target: $(event.target).val())
 
     _onResetCustomTarget: (evt) ->
@@ -280,3 +297,7 @@ class OrientCmsItemView extends Backbone.View
         el = $(evt.target)
         id = el.parent().prop('id')
         val = el.val()
+        @model.set(id, val)
+
+
+

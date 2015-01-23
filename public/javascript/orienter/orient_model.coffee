@@ -37,4 +37,5 @@ class @OrientModel extends Backbone.Model
     audioEnabled = @get('tempo') == true || @get('gain') == true || @get('radar') == true
     @set(audioEnabled: audioEnabled)
 
-
+  onTargetLeaderTargetChange: (m, v, o) =>
+    @set(target: v)

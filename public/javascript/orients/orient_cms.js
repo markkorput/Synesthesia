@@ -45,6 +45,10 @@
         });
         model.on('change:targetLeaderCid', function(model, val, obj) {
           var leader;
+          if (model.targetLeader) {
+            model.targetLeader.off('change:target', model.onTargetLeaderTargetChange);
+            model.targetLeader = void 0;
+          }
           leader = _this.view.collection.get(val);
           if (_this.globalItemView.model.cid === val) {
             leader || (leader = _this.globalItemView.model);
@@ -53,10 +57,10 @@
             console.log("Couldn't find target leader model using cid: " + val);
             return;
           }
-          return leader.on('change:target', function(m, v, o) {
-            return model.set({
-              target: v
-            });
+          leader.on('change:target', model.onTargetLeaderTargetChange);
+          model.targetLeader = leader;
+          return model.set({
+            target: leader.get('target')
           });
         });
         return model.set({
@@ -68,6 +72,18 @@
           sessionId: model.id,
           target: val
         });
+      });
+      this.view.collection.on('change:target_source', function(model, val, obj) {
+        var leader;
+        leader = _this.view.collection.get(val);
+        if (_this.globalItemView.model.cid === val) {
+          leader || (leader = _this.globalItemView.model);
+        }
+        if (leader) {
+          return model.set({
+            targetLeaderCid: val
+          });
+        }
       });
       _.each(['visualize', 'blink', 'tempo', 'gain', 'radar', 'audio_track'], function(prop) {
         globalModel.on('change:' + prop, function(model, val, obj) {
@@ -169,7 +185,8 @@
       'change #blink select': '_onBoolControlChange',
       'change #tempo select': '_onBoolControlChange',
       'change #gain select': '_onBoolControlChange',
-      'change #radar select': '_onBoolControlChange'
+      'change #radar select': '_onBoolControlChange',
+      'keyup #target_source': '_onStringControlChange'
     };
 
     OrientCmsItemView.prototype.initialize = function() {
@@ -177,7 +194,9 @@
       this.$el.append('<p id="orientation"></p>');
       this.$el.append('<p id="position"></p>');
       this._appendStringControl('target_source');
-      this._appendRangeControl('target', 0, 360);
+      this._appendRangeControl('target', 0, 360, {
+        reset: false
+      });
       this._appendBoolControl('visualize');
       this._appendBoolControl('blink');
       this._appendRangeControl('audio_track', 1, 3);
@@ -200,9 +219,10 @@
       return this.$el.append('<p id="' + propName + '"><select>' + global_option + '<option value="1">On</option><option value="0">Off</option></select></p>');
     };
 
-    OrientCmsItemView.prototype._appendRangeControl = function(propName, min, max) {
+    OrientCmsItemView.prototype._appendRangeControl = function(propName, min, max, opts) {
       var resetHtml;
-      if (this.model.get('global') === true) {
+      opts || (opts = {});
+      if (this.model.get('global') === true || opts.reset === false) {
         resetHtml = '';
       } else {
         resetHtml = '<a href="#" id="reset">reset</a>';
@@ -290,7 +310,6 @@
       this._updateBoolControl('tempo');
       this._updateBoolControl('gain');
       this._updateBoolControl('radar');
-      this._updateStringControl('target_source');
       if (this.model.get('highlighted') === true) {
         return this.$el.addClass('highlighted');
       } else {
@@ -305,15 +324,14 @@
     };
 
     OrientCmsItemView.prototype._onCustomTarget = function(evt) {
-      if (this.model.get('global') !== true) {
-        return this.model.set({
-          targetCustomValue: true
-        });
-      }
+      this.model.set({
+        target_source: this.model.cid
+      });
+      return this._updateStringControl('target_source');
     };
 
     OrientCmsItemView.prototype._onCustomTargetUpdate = function(evt) {
-      if (this.model.get('targetCustomValue') !== true && this.model.get('global') !== true) {
+      if (this.model.get('target_source') !== this.model.cid && this.model.get('global') !== true) {
         return;
       }
       return this.model.set({
@@ -367,7 +385,8 @@
       var el, id, val;
       el = $(evt.target);
       id = el.parent().prop('id');
-      return val = el.val();
+      val = el.val();
+      return this.model.set(id, val);
     };
 
     return OrientCmsItemView;

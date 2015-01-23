@@ -9,6 +9,7 @@
     __extends(OrientModel, _super);
 
     function OrientModel() {
+      this.onTargetLeaderTargetChange = __bind(this.onTargetLeaderTargetChange, this);
       this._updateAudio = __bind(this._updateAudio, this);
       this._updateDistance = __bind(this._updateDistance, this);
       _ref = OrientModel.__super__.constructor.apply(this, arguments);
@@ -67,6 +68,12 @@
       audioEnabled = this.get('tempo') === true || this.get('gain') === true || this.get('radar') === true;
       return this.set({
         audioEnabled: audioEnabled
+      });
+    };
+
+    OrientModel.prototype.onTargetLeaderTargetChange = function(m, v, o) {
+      return this.set({
+        target: v
       });
     };
 
