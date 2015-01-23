@@ -69,11 +69,9 @@ class Orienter
   
     @model.on 'change:target', (model, val, obj) =>
       @log 'target-direction', val
-      @_updateVisualizerRotation()
 
     @model.on 'change:orientationValue', (model,val,obj) =>
       @log 'current-direction', val
-      @_updateVisualizerRotation()
 
     @model.on 'change:visualize', (model,val,obj) =>
       if val == true
@@ -85,11 +83,13 @@ class Orienter
       @blinker.enable(val) if @blinker
 
     @model.on 'change:orientationDistance', (model,val,obj) =>
-      @log 'direction-delta', Math.abs(val)
+      @_updateVisualizerRotation()
+      v = Math.abs(val)
+      @log 'direction-delta', v
       @blinker.timeout = val if @blinker
-      @orienterAudio.applyTempo(1.0 + val * 0.03) if @orienterAudio && @model.get('tempo') == true
-      @orienterAudio.applyGain(1.0 - val / 180) if @orienterAudio && @model.get('gain') == true
-      @orienterAudio.applyRadar(val) if @orienterAudio && @model.get('radar') == true
+      @orienterAudio.applyTempo(1.0 + v / 90) if @orienterAudio && @model.get('tempo') == true
+      @orienterAudio.applyGain(1.0 - v / 180 * 0.8) if @orienterAudio && @model.get('gain') == true
+      @orienterAudio.applyRadar(v*2) if @orienterAudio && @model.get('radar') == true
 
     @model.on 'change:audioEnabled', (model,val,obj) =>
       @orienterAudio ||= @orienterAudio()
@@ -125,7 +125,8 @@ class Orienter
     @loadVisualizer()
     @blinker = new Blinker(two: @two)
     
-    # @orienterAudio.start()
+    @orienterAudio.start()
+    @orienterAudio.stop()
     @two.play()
 
 

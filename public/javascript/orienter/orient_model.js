@@ -30,7 +30,7 @@
     };
 
     OrientModel.prototype.initialize = function() {
-      this.on('change:targetOrientationValue', this._updateDistance);
+      this.on('change:target', this._updateDistance);
       this.on('change:orientationValue', this._updateDistance);
       this.on('change:tempo', this._updateAudio);
       this.on('change:gain', this._updateAudio);
@@ -47,7 +47,7 @@
 
     OrientModel.prototype._updateDistance = function() {
       var current, dist, target;
-      target = this.get('targetOrientationValue');
+      target = this.get('target');
       current = this.get('orientationValue');
       if (target === void 0 || current === void 0) {
         return;

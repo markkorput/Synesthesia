@@ -11,8 +11,9 @@ class @OrientModel extends Backbone.Model
     audio_track: 1
 
   initialize: ->
-    @on 'change:targetOrientationValue', @_updateDistance
+    @on 'change:target', @_updateDistance
     @on 'change:orientationValue', @_updateDistance
+
 
     @on 'change:tempo', @_updateAudio
     @on 'change:gain', @_updateAudio
@@ -24,7 +25,7 @@ class @OrientModel extends Backbone.Model
         model.set(lastOrientationTime: new Date().getTime())
 
   _updateDistance: =>
-    target = @get('targetOrientationValue')
+    target = @get('target')
     current = @get('orientationValue')
     return if target == undefined || current == undefined
     target = 180 - (target - 180) if target > 180

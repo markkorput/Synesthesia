@@ -100,7 +100,7 @@
       this.globalTargetMesh.position.set(0, 0, 80);
       this.globalTargetRotator.add(this.globalTargetMesh);
       this.scene.add(this.globalTargetRotator);
-      return this.cms.globalItemView.model.on('change:targetOrientationValue', function(model, value, obj) {
+      return this.cms.globalItemView.model.on('change:target', function(model, value, obj) {
         return _this.globalTargetRotator.rotation.y = value / 180 * Math.PI;
       });
     };

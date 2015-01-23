@@ -90,12 +90,10 @@
         return _this.model.set(data);
       });
       this.model.on('change:target', function(model, val, obj) {
-        _this.log('target-direction', val);
-        return _this._updateVisualizerRotation();
+        return _this.log('target-direction', val);
       });
       this.model.on('change:orientationValue', function(model, val, obj) {
-        _this.log('current-direction', val);
-        return _this._updateVisualizerRotation();
+        return _this.log('current-direction', val);
       });
       this.model.on('change:visualize', function(model, val, obj) {
         if (val === true) {
@@ -110,18 +108,21 @@
         }
       });
       this.model.on('change:orientationDistance', function(model, val, obj) {
-        _this.log('direction-delta', Math.abs(val));
+        var v;
+        _this._updateVisualizerRotation();
+        v = Math.abs(val);
+        _this.log('direction-delta', v);
         if (_this.blinker) {
           _this.blinker.timeout = val;
         }
         if (_this.orienterAudio && _this.model.get('tempo') === true) {
-          _this.orienterAudio.applyTempo(1.0 + val * 0.03);
+          _this.orienterAudio.applyTempo(1.0 + v / 90);
         }
         if (_this.orienterAudio && _this.model.get('gain') === true) {
-          _this.orienterAudio.applyGain(1.0 - val / 180);
+          _this.orienterAudio.applyGain(1.0 - v / 180 * 0.8);
         }
         if (_this.orienterAudio && _this.model.get('radar') === true) {
-          return _this.orienterAudio.applyRadar(val);
+          return _this.orienterAudio.applyRadar(v * 2);
         }
       });
       this.model.on('change:audioEnabled', function(model, val, obj) {
@@ -164,6 +165,8 @@
       this.blinker = new Blinker({
         two: this.two
       });
+      this.orienterAudio.start();
+      this.orienterAudio.stop();
       return this.two.play();
     };
 

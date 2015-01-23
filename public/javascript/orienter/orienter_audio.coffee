@@ -51,6 +51,7 @@ class @OrienterAudio
     bufferLoader.load()
 
   applyTempo: (val) ->
+    console.log 'apply tempo', val
     @source.playbackRate.value = val if @source
 
   applyGain: (val) ->
@@ -107,9 +108,13 @@ class @OrienterAudio
 
   update: (frameCount) ->
     if @_radarTempo
-      sinpos = new Date().getTime() * (1 / @_radarTempo)
-      gain = Math.sin(sinpos) / 2 + 0.75
-      @setGain(gain)
+      if @_radarTempo == 0
+        gain = 1
+      else
+        sinpos = new Date().getTime() * (1 / @_radarTempo)
+        gain = Math.sin(sinpos) / 2 + 0.75
+
+      @setGain(gain*gain)
 
   setTrack: (tracknumber) ->
     @_trackIdx = tracknumber - 1

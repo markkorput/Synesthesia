@@ -32,6 +32,7 @@
     }
 
     OrienterAudio.prototype.applyTempo = function(val) {
+      console.log('apply tempo', val);
       if (this.source) {
         return this.source.playbackRate.value = val;
       }
@@ -103,9 +104,13 @@
     OrienterAudio.prototype.update = function(frameCount) {
       var gain, sinpos;
       if (this._radarTempo) {
-        sinpos = new Date().getTime() * (1 / this._radarTempo);
-        gain = Math.sin(sinpos) / 2 + 0.75;
-        return this.setGain(gain);
+        if (this._radarTempo === 0) {
+          gain = 1;
+        } else {
+          sinpos = new Date().getTime() * (1 / this._radarTempo);
+          gain = Math.sin(sinpos) / 2 + 0.75;
+        }
+        return this.setGain(gain * gain);
       }
     };
 
