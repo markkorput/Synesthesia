@@ -39,3 +39,6 @@ class @OrientModel extends Backbone.Model
 
   onTargetLeaderTargetChange: (m, v, o) =>
     @set(target: v)
+
+  onDirLeaderOrientationChange: (m, v, o) =>
+    @set(target: Math.floor(v.y / Math.PI * 180))

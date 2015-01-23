@@ -35,6 +35,32 @@
           });
         }
       });
+      this.view.collection.on('change:target_source', function(model, val, obj) {
+        var leader, target, v;
+        target = false;
+        if (val.indexOf('target-') === 0) {
+          console.log('yea');
+          v = val.replace('target-', '');
+          target = true;
+        } else {
+          v = val;
+        }
+        leader = _this.view.collection.get(v);
+        if (_this.globalItemView.model.cid === v) {
+          leader || (leader = _this.globalItemView.model);
+        }
+        if (leader) {
+          if (target) {
+            return model.set({
+              targetLeaderCid: v
+            });
+          } else {
+            return model.set({
+              dirLeaderCid: v
+            });
+          }
+        }
+      });
       this.view.collection.on('add', function(model) {
         model.set({
           target: globalModel.get('target'),
@@ -54,17 +80,35 @@
             leader || (leader = _this.globalItemView.model);
           }
           if (leader === void 0) {
-            console.log("Couldn't find target leader model using cid: " + val);
             return;
           }
+          model.unset('dirLeaderCid');
           leader.on('change:target', model.onTargetLeaderTargetChange);
           model.targetLeader = leader;
           return model.set({
             target: leader.get('target')
           });
         });
+        model.on('change:dirLeaderCid', function(model, val, obj) {
+          var leader;
+          if (model.dirLeader) {
+            model.dirLeader.off('change:orientation', model.onDirLeaderOrientationChange);
+            model.dirLeader = void 0;
+          }
+          leader = _this.view.collection.get(val);
+          if (_this.globalItemView.model.cid === val) {
+            leader || (leader = _this.globalItemView.model);
+          }
+          if (leader === void 0) {
+            console.log("Couldn't find dir leader model using cid: " + val);
+            return;
+          }
+          model.unset('targetLeaderCid');
+          leader.on('change:orientation', model.onDirLeaderOrientationChange);
+          return model.dirLeader = leader;
+        });
         return model.set({
-          targetLeaderCid: _this.globalItemView.model.cid
+          target_source: 'target-' + _this.globalItemView.model.cid
         });
       });
       this.view.collection.on('change:target', function(model, val, obj) {
@@ -72,18 +116,6 @@
           sessionId: model.id,
           target: val
         });
-      });
-      this.view.collection.on('change:target_source', function(model, val, obj) {
-        var leader;
-        leader = _this.view.collection.get(val);
-        if (_this.globalItemView.model.cid === val) {
-          leader || (leader = _this.globalItemView.model);
-        }
-        if (leader) {
-          return model.set({
-            targetLeaderCid: val
-          });
-        }
       });
       _.each(['visualize', 'blink', 'tempo', 'gain', 'radar', 'audio_track'], function(prop) {
         globalModel.on('change:' + prop, function(model, val, obj) {
@@ -325,13 +357,13 @@
 
     OrientCmsItemView.prototype._onCustomTarget = function(evt) {
       this.model.set({
-        target_source: this.model.cid
+        target_source: 'target-' + this.model.cid
       });
       return this._updateStringControl('target_source');
     };
 
     OrientCmsItemView.prototype._onCustomTargetUpdate = function(evt) {
-      if (this.model.get('target_source') !== this.model.cid && this.model.get('global') !== true) {
+      if (this.model.get('target_source') !== 'target-' + this.model.cid && this.model.get('global') !== true) {
         return;
       }
       return this.model.set({

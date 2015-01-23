@@ -23,6 +23,25 @@ class @OrientCms
                     m.set(highlighted: false) if m.cid != model.cid
 
 
+        @view.collection.on 'change:target_source', (model, val, obj) =>
+            target = false
+            if val.indexOf('target-') == 0
+                console.log 'yea'
+                v = val.replace('target-', '')
+                target = true
+            else
+                v = val
+
+            # find leader
+            leader = @view.collection.get(v) # get the model with the specified cid
+            leader ||= @globalItemView.model if @globalItemView.model.cid == v
+            # only set the actual effective targetLeaderCid property if the current target_source value specifies a valid model
+            if leader
+                if target
+                    model.set targetLeaderCid: v
+                else
+                    model.set dirLeaderCid: v
+
         # create visual elements for every new connecting client
         @view.collection.on 'add', (model) =>
             model.set
@@ -44,30 +63,47 @@ class @OrientCms
 
                 # abort if not found (maybe val == undefined?)
                 if leader == undefined
-                    console.log "Couldn't find target leader model using cid: " + val
                     return
+
+                # make sure any conflicting dirLeaderCid is unset
+                model.unset('dirLeaderCid')
 
                 # bind listener
                 leader.on 'change:target', model.onTargetLeaderTargetChange
                 model.targetLeader = leader
                 model.set(target: leader.get('target'))
 
+            model.on 'change:dirLeaderCid', (model, val, obj) =>
+                # remove previous listener
+                if model.dirLeader
+                    model.dirLeader.off 'change:orientation', model.onDirLeaderOrientationChange
+                    model.dirLeader = undefined
+
+                # find leader
+                leader = @view.collection.get(val) # get the model with the specified cid
+                leader ||= @globalItemView.model if @globalItemView.model.cid == val
+
+                # abort if not found (maybe val == undefined?)
+                if leader == undefined
+                    console.log "Couldn't find dir leader model using cid: " + val
+                    return
+
+                # make sure any conflicting targetLeaderCid is unset
+                model.unset('targetLeaderCid')
+
+                # bind listener
+                leader.on 'change:orientation', model.onDirLeaderOrientationChange
+                model.dirLeader = leader
+                # model.set(target: leader.get('target'))
 
             # by default every new connected client binds to the global model's target
-            model.set targetLeaderCid: @globalItemView.model.cid
+            # model.set targetLeaderCid: @globalItemView.model.cid
+            model.set target_source: 'target-'+@globalItemView.model.cid
 
 
         # every time a client model's target property changes, make sure we notify them
         @view.collection.on 'change:target', (model, val, obj) =>
             @server.emit 'orient-config', sessionId: model.id, target: val
-
-        @view.collection.on 'change:target_source', (model, val, obj) =>
-            # find leader
-            leader = @view.collection.get(val) # get the model with the specified cid
-            leader ||= @globalItemView.model if @globalItemView.model.cid == val
-            # only set the actual effective targetLeaderCid property if the current target_source value specifies a valid model
-            if leader
-                model.set targetLeaderCid: val
 
         # automate the control and notification for these properties
         _.each ['visualize', 'blink', 'tempo', 'gain', 'radar', 'audio_track'], (prop) =>
@@ -263,11 +299,11 @@ class OrientCmsItemView extends Backbone.View
 
 
     _onCustomTarget: (evt) ->
-        @model.set(target_source: @model.cid) # @model.set(targetCustomValue: true) if @model.get('global') != true
+        @model.set(target_source: 'target-'+@model.cid) # @model.set(targetCustomValue: true) if @model.get('global') != true
         @_updateStringControl('target_source')
 
     _onCustomTargetUpdate: (evt) ->
-        return if @model.get('target_source') != @model.cid && @model.get('global') != true
+        return if @model.get('target_source') != 'target-'+@model.cid && @model.get('global') != true
         @model.set(target: $(event.target).val())
 
     _onResetCustomTarget: (evt) ->

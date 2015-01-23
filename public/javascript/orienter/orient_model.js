@@ -9,6 +9,7 @@
     __extends(OrientModel, _super);
 
     function OrientModel() {
+      this.onDirLeaderOrientationChange = __bind(this.onDirLeaderOrientationChange, this);
       this.onTargetLeaderTargetChange = __bind(this.onTargetLeaderTargetChange, this);
       this._updateAudio = __bind(this._updateAudio, this);
       this._updateDistance = __bind(this._updateDistance, this);
@@ -74,6 +75,12 @@
     OrientModel.prototype.onTargetLeaderTargetChange = function(m, v, o) {
       return this.set({
         target: v
+      });
+    };
+
+    OrientModel.prototype.onDirLeaderOrientationChange = function(m, v, o) {
+      return this.set({
+        target: Math.floor(v.y / Math.PI * 180)
       });
     };
 
