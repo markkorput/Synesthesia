@@ -126,7 +126,7 @@ var state = {
   strobe: false,
   audio: false,
   audioLights: false,
-  motionTrack: false,
+  motionTrack: true,
   opticalFlowTrack: true, //init as true for testing
   opticalFlowFlocking: false,
   currentColor: '#000000',
@@ -134,7 +134,7 @@ var state = {
     this.strobe = false;
     this.audio = false;
     this.audioLights = false;
-    this.motionTrack = false;
+    this.motionTrack = true;
   }
 };
 
